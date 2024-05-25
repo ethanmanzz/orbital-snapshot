@@ -1,7 +1,7 @@
 import { supabase } from '../supabase/supabaseClient';
 
 // Function to fetch user information
-export const getUserInfo = async (userId) => {
+export const getUserInformation = async (userId) => {
   const { data, error } = await supabase
     .from('user_data')
     .select('*')

@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 import { supabase } from './supabaseClient';
 import { getUser } from './auth';
-import { getUserInfo, assignMealPlan, createMealPlan } from '../../backend/mealPlan/mealPlan'; 
+import { getUserInformation, assignMealPlan, createMealPlan } from '../../backend/mealPlan/mealPlan'; 
 import updateNutritionalNeeds from '../mealPlan/nutrition';
 import { CommonActions } from '@react-navigation/native';
 
