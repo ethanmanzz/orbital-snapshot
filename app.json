@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "snapshot",
+    "slug": "snapshot",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./frontend/assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./frontend/assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "We need access to your camera to take photos of your food."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./frontend/assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./frontend/assets/favicon.png"
+    }
+  }
+}
+
