@@ -21,7 +21,7 @@ export default function App() {
     return (
       <NavigationContainer>
         <Stack.Navigator initialRouteName="LoginScreen">
-          <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ title: 'Welcome to SnapShot!' }}/>
+          <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ title: '' }}/>
           <Stack.Screen name="AgeQuestion" component={AgeQuestion} options={{ title: 'Age' }}/>
           <Stack.Screen name="GenderQuestion" component={GenderQuestion} options={{ title: 'Gender' }}/>
           <Stack.Screen name="HeightWeightQuestion" component={HeightWeightQuestion} options={{ title: 'Height & Weight' }}/>
