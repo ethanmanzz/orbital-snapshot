@@ -2,7 +2,7 @@ import { Alert } from 'react-native';
 import { supabase } from './supabaseClient';
 import { getUser } from './auth';
 import { getUserInformation, assignMealPlan, createMealPlan } from '../mealPlan/mealPlanner'; 
-import updateNutritionalNeeds from '../mealPlan/nutrition';
+import updateNutritionalNeeds from '../calorieTracker/nutrition';
 import { CommonActions } from '@react-navigation/native';
 
 //for AgeQuestion.js
