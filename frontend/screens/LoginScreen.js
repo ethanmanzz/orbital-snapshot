@@ -59,7 +59,7 @@ export default function LoginScreen({ navigation }) {
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
       <View style={{ flex: 1 }}>
-      <ImageBackground source={require('../../frontend/assets/login_background.png')} style={styles.background}>
+      <ImageBackground source={require('../../frontend/assets/backgrounds/login_background.png')} style={styles.background}>
         <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
           <Animated.Image 
             source={require('../../frontend/assets/snapshot_logo.png')}

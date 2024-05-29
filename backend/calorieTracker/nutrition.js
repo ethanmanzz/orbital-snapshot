@@ -12,7 +12,6 @@ import { gainMuscle_noPref, loseWeight_noPref, maintainHealth_noPref } from "./c
   };
 
   const getTDEE = (bmr, activityLevel) => {
-    console.log(activityLevel)
     switch (activityLevel) {
       case 'Sedentary':
         return bmr * 1.2;
@@ -31,7 +30,6 @@ import { gainMuscle_noPref, loseWeight_noPref, maintainHealth_noPref } from "./c
 
   const updateNutritionalNeeds = async (user) => {
     try {
-      console.log(user);
   
       const bmr = getBMR(user.weight, user.height, user.age, user.gender);
       const baseCalories = getTDEE(bmr, user.activity_factor);

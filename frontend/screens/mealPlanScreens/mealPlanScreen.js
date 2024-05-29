@@ -2,18 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground } from 'react-native';
 import { Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
+import { useNavigation } from '@react-navigation/native';
+import { loseWeight_noPref_Sodium_MealPlan } from '../../../backend/mealPlan/mealPlans';
 
 const loadFonts = () => {
     return Font.loadAsync({
-      'CustomFont': require('../../assets/fonts/norwester.otf'),
+        'CustomFont': require('../../assets/fonts/norwester.otf'),
     });
-  };
+};
 
 const MealPlanScreen = () => {
     const [showBreakfast, setShowBreakfast] = useState(false);
     const [showLunch, setShowLunch] = useState(false);
     const [showDinner, setShowDinner] = useState(false);
     const [fontsLoaded, setFontsLoaded] = useState(false);
+    const navigation = useNavigation();
 
     const toggleBreakfast = () => setShowBreakfast(!showBreakfast);
     const toggleLunch = () => setShowLunch(!showLunch);
@@ -23,63 +26,71 @@ const MealPlanScreen = () => {
         loadFonts().then(() => setFontsLoaded(true));
     }, []);
 
-    
+    const foodItems = loseWeight_noPref_Sodium_MealPlan();
+
+    const handleFoodClick = (food) => {
+        navigation.navigate('MealDetailsScreen', { food });
+    };
+
     return (
         <ImageBackground source={require("../../assets/food_pictures/mealPlan_bg.png")} style={styles.background}>
-          <ScrollView contentContainerStyle={styles.container}>
-            <View style={styles.innerContainer}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>WHAT TO EAT?</Text>
-                </View>
+            <ScrollView contentContainerStyle={styles.container}>
+                <View style={styles.innerContainer}>
+                    <View style={styles.header}>
+                        <Text style={styles.title}>WHAT TO EAT?</Text>
+                    </View>
 
-                <View style={styles.mealBox}>
-                    <TouchableOpacity onPress={toggleBreakfast} style={styles.mealButton}>
-                        <Text style={styles.mealTitle}>BREAKFAST</Text>
-                        <Icon name={showBreakfast ? 'chevron-up' : 'chevron-down'} type='font-awesome' color='#fff' />
-                    </TouchableOpacity>
-                    {showBreakfast && (
-                        <View style={styles.mealContent}>
-                            <Text style={styles.mealItem}>Oatmeal with Fruits</Text>
-                            <Text style={styles.mealItem}>Wholegrain Avocado Toast</Text>
-                            <Text style={styles.mealItem}>Booster Smoothie</Text>
-                            <Text style={styles.mealItem}>Chia Seed Pudding w Berries</Text>
-                        </View>
-                    )}
-                </View>
+                    <View style={styles.mealBox}>
+                        <TouchableOpacity onPress={toggleBreakfast} style={styles.mealButton}>
+                            <Text style={styles.mealTitle}>BREAKFAST</Text>
+                            <Icon name={showBreakfast ? 'chevron-up' : 'chevron-down'} type='font-awesome' color='#fff' />
+                        </TouchableOpacity>
+                        {showBreakfast && (
+                            <View style={styles.mealContent}>
+                                {foodItems.breakfast.map((food, index) => (
+                                    <TouchableOpacity key={index} onPress={() => handleFoodClick(food)}>
+                                        <Text style={styles.mealItem}>{food.name}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </View>
 
-                <View style={styles.mealBox}>
-                    <TouchableOpacity onPress={toggleLunch} style={styles.mealButton}>
-                        <Text style={styles.mealTitle}>LUNCH</Text>
-                        <Icon name={showLunch ? 'chevron-up' : 'chevron-down'} type='font-awesome' color='#fff' />
-                    </TouchableOpacity>
-                    {showLunch && (
-                        <View style={styles.mealContent}>
-                            <Text style={styles.mealItem}>Grilled Chicken Salad</Text>
-                            <Text style={styles.mealItem}>Quinoa and Veggie Bowl</Text>
-                            <Text style={styles.mealItem}>Turkey Sandwich</Text>
-                            <Text style={styles.mealItem}>Lentil Soup</Text>
-                        </View>
-                    )}
-                </View>
+                    <View style={styles.mealBox}>
+                        <TouchableOpacity onPress={toggleLunch} style={styles.mealButton}>
+                            <Text style={styles.mealTitle}>LUNCH</Text>
+                            <Icon name={showLunch ? 'chevron-up' : 'chevron-down'} type='font-awesome' color='#fff' />
+                        </TouchableOpacity>
+                        {showLunch && (
+                            <View style={styles.mealContent}>
+                                {foodItems.lunch.map((food, index) => (
+                                    <TouchableOpacity key={index} onPress={() => handleFoodClick(food)}>
+                                        <Text style={styles.mealItem}>{food.name}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </View>
 
-                <View style={styles.mealBox}>
-                    <TouchableOpacity onPress={toggleDinner} style={styles.mealButton}>
-                        <Text style={styles.mealTitle}>DINNER</Text>
-                        <Icon name={showDinner ? 'chevron-up' : 'chevron-down'} type='font-awesome' color='#fff' />
-                    </TouchableOpacity>
-                    {showDinner && (
-                        <View style={styles.mealContent}>
-                            <Text style={styles.mealItem}>Baked Salmon with Veggies</Text>
-                            <Text style={styles.mealItem}>Vegetable Stir Fry</Text>
-                            <Text style={styles.mealItem}>Chicken and Rice</Text>
-                            <Text style={styles.mealItem}>Beef Tacos</Text>
-                        </View>
-                    )}
-                </View>
+                    <View style={styles.mealBox}>
+                        <TouchableOpacity onPress={toggleDinner} style={styles.mealButton}>
+                            <Text style={styles.mealTitle}>DINNER</Text>
+                            <Icon name={showDinner ? 'chevron-up' : 'chevron-down'} type='font-awesome' color='#fff' />
+                        </TouchableOpacity>
+                        {showDinner && (
+                            <View style={styles.mealContent}>
+                                {foodItems.dinner.map((food, index) => (
+                                    <TouchableOpacity key={index} onPress={() => handleFoodClick(food)}>
+                                        <Text style={styles.mealItem}>{food.name}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </View>
 
-                <Image source={require('../../assets/snapshot_logo.png')} style={styles.logo} />
-            </View>
-         </ScrollView>
+                    <Image source={require('../../assets/snapshot_logo.png')} style={styles.logo} />
+                </View>
+            </ScrollView>
         </ImageBackground>
     );
 };

@@ -9,7 +9,7 @@ export default function ActivityQuestion({ navigation }) {
   };
 
   return (
-    <ImageBackground source={require('../../../frontend/assets/activity_bg.png')} style={styles.background}>
+    <ImageBackground source={require('../../../frontend/assets/backgrounds/activity_bg.png')} style={styles.background}>
       <View style={styles.container}>
         <Text style={styles.title}>How Active are you?</Text>
         <Text style={styles.subtitle}>This is used to make your own personalised plan</Text>

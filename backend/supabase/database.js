@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 import { supabase } from './supabaseClient';
 import { getUser } from './auth';
-import { getUserInformation, assignMealPlan, createMealPlan } from '../mealPlan/mealPlanner'; 
+import { assignMealPlan, chooseMealPlan } from '../mealPlan/mealPlanner'; 
 import updateNutritionalNeeds from '../calorieTracker/nutrition';
 import { CommonActions } from '@react-navigation/native';
 
@@ -225,7 +225,12 @@ export const handleAllergy = async (allergy, navigation) => {
       }
 
       const userData = await fetchUserQuestionnaireData();
-      await updateNutritionalNeeds(userData);
+      await updateNutritionalNeeds(userData); //assigns the required calories, carbs, protein and fats to the user
+
+      console.log(userData);
+      const mealPlan = await chooseMealPlan(userData);
+      await assignMealPlan(user.id, mealPlan); //based on all the questions, assign an appropriate meal plan
+
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -261,7 +266,6 @@ export const handleAllergy = async (allergy, navigation) => {
       console.error('Error fetching user data:', error);
       throw new Error('Error fetching user data'); // Propagate the error
     }
-    console.log(data);
   
     return data;
   };
@@ -287,6 +291,72 @@ export const handleAllergy = async (allergy, navigation) => {
       return data;
     };
   
+  export const fetchDailyIntake = async (userId) => {
+    const { data, error } = await supabase
+        .from('daily_intake')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false });
+      
+    if (error) {
+        console.error('Error fetching daily intake data: ', error);
+        return null;
+    }
+    return data;
+  };
+  
+  export const storeDailyIntake = async (dailyIntake) => {
+      const { data, error } = await supabase
+          .from('daily_intake')
+          .insert([dailyIntake]);
+      
+      if (error) {
+          console.error('Error storing daily intake data: ', error);
+          return null;
+      }
+      return data;
+  };
+
+  
+
+export const fetchUserWeeklyAndMonthlyAverages = async (userId) => {
+  try {
+    // Fetch weekly averages
+    const { data: weeklyData, error: weeklyError } = await supabase
+      .rpc('calculate_weekly_averages', { user_id: userId });
+
+    if (weeklyError) {
+      console.error('Error fetching weekly averages:', weeklyError);
+      return { weeklyError };
+    }
+
+    // Fetch monthly averages
+    const { data: monthlyData, error: monthlyError } = await supabase
+      .rpc('calculate_monthly_averages', { user_id: userId });
+
+    if (monthlyError) {
+      console.error('Error fetching monthly averages:', monthlyError);
+      return { monthlyError };
+    }
+
+    return { weeklyData, monthlyData };
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return { error };
+  }
+};
+
+  
+  
+  
+
+
+
+
+      
+
+
+
   
   
 

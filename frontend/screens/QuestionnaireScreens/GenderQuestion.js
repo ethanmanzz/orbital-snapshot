@@ -11,7 +11,7 @@ export default function GenderQuestion({ navigation }) {
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
       <View style={{ flex: 1 }}>
-      <ImageBackground source={require('../../../frontend/assets/gender_bg.png')} style={styles.background}>
+      <ImageBackground source={require('../../../frontend/assets/backgrounds/gender_bg.png')} style={styles.background}>
         <View style={styles.container}>
           <Text style={styles.title}>What is your Gender?</Text>
           <Text style={styles.subtitle}>This is used to make your own personalised plan</Text>

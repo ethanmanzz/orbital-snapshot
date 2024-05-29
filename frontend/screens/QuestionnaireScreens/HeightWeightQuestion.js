@@ -13,7 +13,7 @@ export default function HeightWeightQuestion({ navigation }) {
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
       <View style={{ flex: 1 }}>
-    <ImageBackground source={require('../../../frontend/assets/heightweight_bg.png')} style={styles.background}>
+    <ImageBackground source={require('../../../frontend/assets/backgrounds/heightweight_bg.png')} style={styles.background}>
       <View style={styles.container}>
         <Text style={styles.title}>What is your Current Height and Weight?</Text>
         <Text style={styles.subtitle}>This is used to make your own personalised plan</Text>

@@ -10,7 +10,7 @@ import ActivityQuestion from './frontend/screens/QuestionnaireScreens/ActivityQu
 import DietaryPrefQuestion from './frontend/screens/QuestionnaireScreens/DietaryPrefQuestion';
 import FoodAllergyQuestion from './frontend/screens/QuestionnaireScreens/FoodAllergyQuestion';
 import HomeScreen from './frontend/screens/HomeScreen';
-import chickenRiceScreen from './frontend/screens/mealPlanScreens/chickenRice';
+import MealDetailsScreen from './frontend/screens/mealPlanScreens/MealDetailsScreen';
 import MealPlanScreen from './frontend/screens/mealPlanScreens/mealPlanScreen';
 import Tabs from './frontend/navigation/BottomTabNavigator';
 
@@ -22,8 +22,7 @@ const Stack = createStackNavigator();
 export default function App() {
     return (
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="MealPlanScreen">
-          <Stack.Screen name="MealPlanScreen" component={MealPlanScreen} options={{headerShown: false}}/>
+        <Stack.Navigator initialRouteName="LoginScreen">
           <Stack.Screen name="LoginScreen" component={LoginScreen} options={{headerShown: false}}/>
           <Stack.Screen name="AgeQuestion" component={AgeQuestion} options={{ title: 'Age' }}/>
           <Stack.Screen name="GenderQuestion" component={GenderQuestion} options={{ title: 'Gender' }}/>

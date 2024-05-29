@@ -13,7 +13,7 @@ export default function FoodAllergyQuestion({ navigation }) {
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
     <View style={{ flex: 1 }}>
-    <ImageBackground source={require('../../../frontend/assets/allergy_bg.png')} style={styles.background}>
+    <ImageBackground source={require('../../../frontend/assets/backgrounds/allergy_bg.png')} style={styles.background}>
       <View style={styles.container}>
         <Text style={styles.title}>Do you have any Food Allergies?</Text>
         <Text style={styles.subtitle}>This is used to make your own personalised plan</Text>
