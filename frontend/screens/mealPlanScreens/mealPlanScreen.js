@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackg
 import { Icon } from 'react-native-elements';
 import * as Font from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
-import { loseWeight_noPref_Sodium_MealPlan } from '../../../backend/mealPlan/mealPlans';
+import { fetchUserMealPlan } from '../../../backend/supabase/database';
 
 const loadFonts = () => {
     return Font.loadAsync({
@@ -16,6 +16,7 @@ const MealPlanScreen = () => {
     const [showLunch, setShowLunch] = useState(false);
     const [showDinner, setShowDinner] = useState(false);
     const [fontsLoaded, setFontsLoaded] = useState(false);
+    const [foodItems, setFoodItems] = useState({ breakfast: [], lunch: [], dinner: [] });
     const navigation = useNavigation();
 
     const toggleBreakfast = () => setShowBreakfast(!showBreakfast);
@@ -26,7 +27,14 @@ const MealPlanScreen = () => {
         loadFonts().then(() => setFontsLoaded(true));
     }, []);
 
-    const foodItems = loseWeight_noPref_Sodium_MealPlan();
+    useEffect(() => {
+        const fetchData = async () => {
+            const userMealPlan = await fetchUserMealPlan();
+            setFoodItems(userMealPlan);
+        };
+
+        fetchData();
+    }, []);
 
     const handleFoodClick = (food) => {
         navigation.navigate('MealDetailsScreen', { food });

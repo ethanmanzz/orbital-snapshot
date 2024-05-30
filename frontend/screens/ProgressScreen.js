@@ -23,15 +23,15 @@ const ProgressScreen = () => {
         }
 
         const user = session.data.session.user;
-        console.log('User ID:', user.id);
+        //console.log('User ID:', user.id);
         const { weeklyData, monthlyData, error } = await fetchUserWeeklyAndMonthlyAverages(user.id);
 
         if (error) {
           console.error('Error fetching data:', error);
           setError(error);
         } else {
-          console.log('Weekly Data:', weeklyData);
-          console.log('Monthly Data:', monthlyData);
+          //console.log('Weekly Data:', weeklyData);
+          //console.log('Monthly Data:', monthlyData);
           setWeeklyData(weeklyData);
           setMonthlyData(monthlyData);
         }

@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 import { supabase } from './supabaseClient';
 import { getUser } from './auth';
-import { assignMealPlan, chooseMealPlan } from '../mealPlan/mealPlanner'; 
+import { assignMealPlan, chooseMealPlan, getMealPlan } from '../mealPlan/mealPlanner'; 
 import updateNutritionalNeeds from '../calorieTracker/nutrition';
 import { CommonActions } from '@react-navigation/native';
 
@@ -237,12 +237,6 @@ export const handleAllergy = async (allergy, navigation) => {
           routes: [{ name: 'HomeScreen' }],
         })
       );
-      // Fetch user information after completing the questionnaire (INCOMPLETE)
-      //const userInfo = await getUserInfo(user.id);
-
-      // Assign a customized meal plan based on user information
-      //const mealPlan = createMealPlan(userInfo);
-      //await assignMealPlan(user.id, mealPlan);
 
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -290,6 +284,26 @@ export const handleAllergy = async (allergy, navigation) => {
       
       return data;
     };
+
+  //for mealPlanScreen.js
+  export const fetchUserMealPlan = async () => {
+    const { data: { user } } = await supabase.auth.getUser(); 
+    if (user) {
+        const { data, error } = await supabase
+            .from('user_data')
+            .select('meal_plan')
+            .eq('id', user.id)
+            .single();
+        
+        if (data && !error) {
+            const mealPlanType = data.meal_plan;
+            const mealPlan = getMealPlan(mealPlanType);
+            return mealPlan;
+        } else {
+            console.error('Error fetching meal plan:', error);
+        }
+    }
+  };
   
   export const fetchDailyIntake = async (userId) => {
     const { data, error } = await supabase
