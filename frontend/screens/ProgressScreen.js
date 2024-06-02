@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, Dimensions, ScrollView } from 'react-native';
-import { fetchUserWeeklyAndMonthlyAverages } from '../../backend/supabase/database';
+import { fetchUserWeeklyAndMonthlyAverages, fetchUserDailyGoals } from '../../backend/supabase/database';
 import { getUser } from '../../backend/supabase/auth';
 import SegmentedControlTab from 'react-native-segmented-control-tab';
 import { BarChart } from 'react-native-chart-kit';
@@ -11,6 +11,7 @@ const ProgressScreen = () => {
   const [loading, setLoading] = useState(true);
   const [weeklyData, setWeeklyData] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
+  const [userGoals, setUserGoals] = useState({});
   const [error, setError] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -23,18 +24,25 @@ const ProgressScreen = () => {
         }
 
         const user = session.data.session.user;
-        //console.log('User ID:', user.id);
-        const { weeklyData, monthlyData, error } = await fetchUserWeeklyAndMonthlyAverages(user.id);
+        console.log('User ID:', user.id);
 
-        if (error) {
-          console.error('Error fetching data:', error);
-          setError(error);
-        } else {
-          //console.log('Weekly Data:', weeklyData);
-          //console.log('Monthly Data:', monthlyData);
-          setWeeklyData(weeklyData);
-          setMonthlyData(monthlyData);
+        const [goals, averages] = await Promise.all([
+          fetchUserDailyGoals(user.id),
+          fetchUserWeeklyAndMonthlyAverages(user.id)
+        ]);
+
+        console.log('User Goals:', goals);
+
+        if (goals.error) {
+          throw goals.error;
         }
+        if (averages.error) {
+          throw averages.error;
+        }
+
+        setUserGoals(goals);
+        setWeeklyData(averages.weeklyData);
+        setMonthlyData(averages.monthlyData);
       } catch (err) {
         setError(err);
       } finally {
@@ -47,6 +55,14 @@ const ProgressScreen = () => {
 
   const handleIndexChange = (index) => {
     setSelectedIndex(index);
+  };
+
+  const calculatePercentage = (current, goal) => {
+    return goal ? ((current / goal) * 100).toFixed(2) : 0;
+  };
+
+  const formatValue = (value) => {
+    return value.toFixed(1);
   };
 
   if (loading) {
@@ -67,25 +83,23 @@ const ProgressScreen = () => {
     color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     barPercentage: 0.5,
-    yAxisLabel: '',
-    formatYLabel: (yValue) => `${Math.round(yValue / 50) * 50}`, // Ensures multiples of 50
   };
 
   const getPast7Days = () => {
     let dates = [];
-    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      dates.push(daysOfWeek[date.getDay()]); // Use the short form of the day
+      dates.push(daysOfWeek[date.getDay()]);
     }
     return dates;
   };
 
-  const generateChartData = (data) => {
-    let chartData = new Array(7).fill(0); // Initialize with 0 for all days
+  const generateChartData = (data, key) => {
+    let chartData = new Array(7).fill(0);
     data.forEach((item, index) => {
-      chartData[index] = item.average_calories;
+      chartData[index] = item[key];
     });
     return chartData;
   };
@@ -94,7 +108,7 @@ const ProgressScreen = () => {
     labels: getPast7Days(),
     datasets: [
       {
-        data: selectedIndex === 0 ? generateChartData(weeklyData) : generateChartData(monthlyData),
+        data: selectedIndex === 0 ? generateChartData(weeklyData, 'average_calories') : generateChartData(monthlyData, 'average_calories'),
       },
     ],
   };
@@ -111,38 +125,33 @@ const ProgressScreen = () => {
         tabTextStyle={styles.tabTextStyle}
         activeTabTextStyle={styles.activeTabTextStyle}
       />
-      {selectedIndex === 0 ? (
-        weeklyData && weeklyData.length > 0 ? (
-          <View style={styles.dataContainer}>
-            <Text>Calories: {weeklyData[0].average_calories}</Text>
-            <Text>Proteins: {weeklyData[0].average_proteins}</Text>
-            <Text>Fats: {weeklyData[0].average_fats}</Text>
-            <Text>Carbs: {weeklyData[0].average_carbs}</Text>
-          </View>
-        ) : (
-          <Text>No weekly data available</Text>
-        )
-      ) : (
-        monthlyData && monthlyData.length > 0 ? (
-          <View style={styles.dataContainer}>
-            <Text>Calories: {monthlyData[0].average_calories}</Text>
-            <Text>Proteins: {monthlyData[0].average_proteins}</Text>
-            <Text>Fats: {monthlyData[0].average_fats}</Text>
-            <Text>Carbs: {monthlyData[0].average_carbs}</Text>
-          </View>
-        ) : (
-          <Text>No monthly data available</Text>
-        )
-      )}
-      <BarChart
-        style={styles.chartStyle}
-        data={data}
-        width={screenWidth - 40}
-        height={220}
-        yAxisLabel=""
-        chartConfig={chartConfig}
-        verticalLabelRotation={0}
-      />
+      <View style={styles.summaryContainer}>
+        <Text style={styles.summaryText}>
+          Calories: {weeklyData[0]?.average_calories || 0} / {userGoals.caloriegoal || 'N/A'} kcal ({calculatePercentage(weeklyData[0]?.average_calories || 0, userGoals.caloriegoal)}%)
+        </Text>
+        <Text style={styles.summaryText}>
+          Proteins: {formatValue(weeklyData[0]?.average_proteins || 0)} / {userGoals.proteingoal || 'N/A'} g ({calculatePercentage(weeklyData[0]?.average_proteins || 0, userGoals.proteingoal)}%)
+        </Text>
+        <Text style={styles.summaryText}>
+          Fats: {formatValue(weeklyData[0]?.average_fats || 0)} / {userGoals.fatsgoal || 'N/A'} g ({calculatePercentage(weeklyData[0]?.average_fats || 0, userGoals.fatsgoal)}%)
+        </Text>
+        <Text style={styles.summaryText}>
+          Carbs: {formatValue(weeklyData[0]?.average_carbs || 0)} / {userGoals.carbsgoal || 'N/A'} g ({calculatePercentage(weeklyData[0]?.average_carbs || 0, userGoals.carbsgoal)}%)
+        </Text>
+      </View>
+      <View style={styles.chartContainer}>
+        <Text style={styles.chartTitle}>Average Calorie Intake</Text>
+        <BarChart
+          style={styles.chartStyle}
+          data={data}
+          width={screenWidth - 40}
+          height={220}
+          yAxisLabel=""
+          chartConfig={chartConfig}
+          verticalLabelRotation={0}
+        />
+      </View>
+      
     </ScrollView>
   );
 };
@@ -171,8 +180,21 @@ const styles = StyleSheet.create({
   activeTabTextStyle: {
     color: '#ffffff',
   },
-  dataContainer: {
-    padding: 20,
+  summaryContainer: {
+    marginBottom: 20,
+  },
+  summaryText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  chartContainer: {
+    marginVertical: 10,
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
   },
   chartStyle: {
     marginVertical: 8,

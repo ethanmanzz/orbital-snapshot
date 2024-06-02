@@ -59,11 +59,52 @@ export const getMealPlan = (mealPlanType) => {
         return mealPlans.loseWeight_keto_Sodium_MealPlan();
     case 'weightloss-keto-lowsodium':
         return mealPlans.loseWeight_keto_lowSodium_MealPlan();
+    case 'musclegain-nopref-':
+        return mealPlans.muscleGain_noPref_Sodium_MealPlan();
+    case 'musclegain_nopref-lowsodium':
+        return mealPlans.muscleGain_noPref_lowSodium_MealPlan();
+    case 'musclegain-vegetarian-':
+        return mealPlans.muscleGain_vegetarian_Sodium_MealPlan();
+    case 'musclegain-vegetarian-lowsodium':
+        return mealPlans.muscleGain_vegetarian_lowSodium_MealPlan();
+    case 'musclegain-vegan-':
+        return mealPlans.muscleGain_vegan_Sodium_MealPlan();
+    case 'musclegain-vegan-lowsodium':
+        return mealPlans.muscleGain_vegan_lowSodium_MealPlan();
+    case 'musclegain-halal-':
+        return mealPlans.muscleGain_halal_Sodium_MealPlan();
+    case 'musclegain-halal-lowsodium':
+        return mealPlans.muscleGain_halal_lowSodium_MealPlan();
+    case 'musclegain-keto-':
+        return mealPlans.muscleGain_keto_Sodium_MealPlan();
+    case 'musclegain-keto-lowsodium':
+        return mealPlans.muscleGain_keto_lowSodium_MealPlan();
+    case 'maintainhealth-nopref-':
+        return mealPlans.maintainHealth_noPref_Sodium_MealPlan();
+    case 'maintainhealth_nopref-lowsodium':
+        return mealPlans.maintainHealth_noPref_lowSodium_MealPlan();
+    case 'maintainhealth-vegetarian-':
+        return mealPlans.maintainHealth_vegetarian_Sodium_MealPlan();
+    case 'maintainhealth-vegetarian-lowsodium':
+        return mealPlans.maintainHealth_vegetarian_lowSodium_MealPlan();
+    case 'maintainhealth-vegan-':
+        return mealPlans.maintainHealth_vegan_Sodium_MealPlan();
+    case 'maintainhealth-vegan-lowsodium':
+        return mealPlans.maintainHealth_vegan_lowSodium_MealPlan();
+    case 'maintainhealth-halal-':
+        return mealPlans.maintainHealth_halal_Sodium_MealPlan();
+    case 'maintainhealth-halal-lowsodium':
+        return mealPlans.maintainHealth_halal_lowSodium_MealPlan();
+    case 'maintainhealth-keto-':
+        return mealPlans.maintainHealth_keto_Sodium_MealPlan();
+    case 'maintainhealth-keto-lowsodium':
+        return mealPlans.maintainHealth_keto_lowSodium_MealPlan();
+    
     default:
         return {
-            breakfast: [/* default breakfast items */],
-            lunch: [/* default lunch items */],
-            dinner: [/* default dinner items */]
+            breakfast: [],
+            lunch: [],
+            dinner: []
         };
 }
 }

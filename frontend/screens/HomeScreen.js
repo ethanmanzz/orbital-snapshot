@@ -50,16 +50,17 @@ const HomeScreen = ({ navigation }) => {
     const currentDate = selectedDate || date;
     setDate(currentDate);
     setShowDatePicker(false);
+    fetchNutritionData(currentDate); // Fetch data for the selected date
+  };
+
+  const fetchNutritionData = async (selectedDate) => {
+    const data = await fetchUserNutritionData(selectedDate);
+    setNutritionData(data);
   };
 
   useEffect(() => {
-    const fetchNutritionData = async () => {
-      const data = await fetchUserNutritionData();
-      setNutritionData(data);
-    };
-
-    fetchNutritionData();
-  }, []);
+    fetchNutritionData(date); // Fetch data for the current date on initial render
+  }, [date]);
 
   const getProgressData = (current, goal) => {
     return current / goal;
@@ -73,7 +74,7 @@ const HomeScreen = ({ navigation }) => {
           <Ionicons name="camera" size={24} color="black" />
         </TouchableOpacity>
       </View>
-      <View style={styles.content}>      
+      <View style={styles.content}>
         <View style={styles.progressRingContainer}>
           <View style={styles.largeProgressRing}>
             <Text>Calories</Text>
@@ -239,3 +240,5 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
+

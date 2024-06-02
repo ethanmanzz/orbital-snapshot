@@ -264,27 +264,6 @@ export const handleAllergy = async (allergy, navigation) => {
     return data;
   };
 
-  export async function fetchUserNutritionData() {
-    const session = await supabase.auth.getSession();
-    if (!session.data.session) {
-      throw new Error('User not logged in');
-    }
-    const user = session.data.session.user;
-  
-    const { data, error } = await supabase
-      .from('user_nutrition')
-      .select('currentcalories, caloriegoal, currentcarbs, carbsgoal, currentprotein, proteingoal, currentfats, fatsgoal')
-      .eq('id', user.id)
-      .single(); 
-  
-      if (error) {
-        console.error('Error fetching user data:', error);
-        return;
-      }
-      
-      return data;
-    };
-
   //for mealPlanScreen.js
   export const fetchUserMealPlan = async () => {
     const { data: { user } } = await supabase.auth.getUser(); 
@@ -305,78 +284,160 @@ export const handleAllergy = async (allergy, navigation) => {
     }
   };
   
-  export const fetchDailyIntake = async (userId) => {
+
+
+  //jwong code
+  export async function fetchUserNutritionData(date) {
+    const session = await supabase.auth.getSession();
+    if (!session.data.session) {
+      throw new Error('User not logged in');
+    }
+    const user = session.data.session.user;
+    const userId = user.id;
+
+    // Fetch user nutrition goals
+    const { data: userNutrition, error: userNutritionError } = await supabase
+      .from('user_nutrition')
+      .select('caloriegoal, carbsgoal, proteingoal, fatsgoal')
+      .eq('id', userId)
+      .single();
+
+    if (userNutritionError) {
+      console.error('Error fetching user nutrition data:', userNutritionError);
+      return null;
+    }
+
+    //Formatting to same a format that is the same as supabase
+    const formattedDate = date.toISOString().split('T')[0]; //format the date so that it can be checked 
+    // Fetch current daily intake
+    const { data: dailyIntake, error: dailyIntakeError } = await supabase
+      .from('daily_intake')
+      .select('calories, carbs, proteins, fats')
+      .eq('id', userId)
+      .eq('date(created_at)', formattedDate); //checkthe date 
+
+    if (dailyIntakeError) {
+      console.error('Error fetching daily intake data:', dailyIntakeError);
+      return null;
+    }
+
+    const totalIntake = dailyIntake.reduce((acc, entry) => {
+      acc.calories += entry.calories || 0;
+      acc.carbs += entry.carbs || 0;
+      acc.protein += entry.proteins || 0;
+      acc.fats += entry.fats || 0;
+      return acc;
+    }, { calories: 0, carbs: 0, protein: 0, fats: 0 });
+
+    return {
+      ...userNutrition,
+      currentcalories: totalIntake.calories,
+      currentcarbs: totalIntake.carbs,
+      currentprotein: totalIntake.protein,
+      currentfats: totalIntake.fats,
+    };
+  };
+
+export const fetchDailyIntake = async (userId) => {
+  const { data, error } = await supabase
+      .from('daily_intake')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false });
+    
+  if (error) {
+      console.error('Error fetching daily intake data: ', error);
+      return null;
+  }
+  return data;
+};
+
+export const storeDailyIntake = async (dailyIntake) => {
     const { data, error } = await supabase
         .from('daily_intake')
-        .select('*')
-        .eq('user_id', userId)
-        .order('date', { ascending: false });
-      
+        .insert([dailyIntake]);
+    
     if (error) {
-        console.error('Error fetching daily intake data: ', error);
+        console.error('Error storing daily intake data: ', error);
         return null;
     }
     return data;
-  };
-  
-  export const storeDailyIntake = async (dailyIntake) => {
-      const { data, error } = await supabase
-          .from('daily_intake')
-          .insert([dailyIntake]);
-      
-      if (error) {
-          console.error('Error storing daily intake data: ', error);
-          return null;
-      }
-      return data;
-  };
-
-  
-
-export const fetchUserWeeklyAndMonthlyAverages = async (userId) => {
-  try {
-    // Fetch weekly averages
-    const { data: weeklyData, error: weeklyError } = await supabase
-      .rpc('calculate_weekly_averages', { user_id: userId });
-
-    if (weeklyError) {
-      console.error('Error fetching weekly averages:', weeklyError);
-      return { weeklyError };
-    }
-
-    // Fetch monthly averages
-    const { data: monthlyData, error: monthlyError } = await supabase
-      .rpc('calculate_monthly_averages', { user_id: userId });
-
-    if (monthlyError) {
-      console.error('Error fetching monthly averages:', monthlyError);
-      return { monthlyError };
-    }
-
-    return { weeklyData, monthlyData };
-  } catch (error) {
-    console.error('Unexpected error:', error);
-    return { error };
-  }
 };
 
-  
-  
-  
+
+
+export const fetchUserWeeklyAndMonthlyAverages = async (userId) => {
+try {
+  // Fetch weekly averages
+  const { data: weeklyData, error: weeklyError } = await supabase
+    .rpc('calculate_weekly_averages', { user_id: userId });
+
+  if (weeklyError) {
+    console.error('Error fetching weekly averages:', weeklyError);
+    return { weeklyError };
+  }
+
+  // Fetch monthly averages
+  const { data: monthlyData, error: monthlyError } = await supabase
+    .rpc('calculate_monthly_averages', { user_id: userId });
+
+  if (monthlyError) {
+    console.error('Error fetching monthly averages:', monthlyError);
+    return { monthlyError };
+  }
+
+  return { weeklyData, monthlyData };
+} catch (error) {
+  console.error('Unexpected error:', error);
+  return { error };
+}
+};
+
+//To calculate the amount for each week 
+
+export const fetchUserDailyGoals = async (userId) => {
+try {
+  const { data, error } = await supabase
+  .from('user_nutrition') // Assuming the table name is 'user_nutrition'
+  .select('caloriegoal, carbsgoal, proteingoal, fatsgoal')
+  .eq('id', userId)
+  .single(); // Assuming you want a single result for the user
+
+if (error) {
+  console.error('Error fetching user daily goals:', error);
+  return null;
+}
+
+return data;
+} catch (error) {
+console.error('Unexpected error:', error);
+return null;
+}
+};
 
 
 
 
-      
-
-
-
-  
-  
 
 
 
 
-      
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+    
 
 
