@@ -7,9 +7,14 @@ export default function FoodAllergyQuestion({ navigation }) {
   const [allergy, setAllergy] = useState('');
 
   const updateAllergy = async () => {
-    await handleAllergy(allergy, navigation);
-  };
+    await handleAllergy(allergy);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'HomeScreen' }],
+     });
 
+  };
+  
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
     <View style={{ flex: 1 }}>

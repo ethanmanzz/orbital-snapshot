@@ -2,6 +2,7 @@ import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './frontend/screens/LoginScreen';
+import UsernameQuestion from './frontend/screens/QuestionnaireScreens/UsernameQuestion';
 import AgeQuestion from './frontend/screens/QuestionnaireScreens/AgeQuestion';
 import GenderQuestion from './frontend/screens/QuestionnaireScreens/GenderQuestion';
 import HeightWeightQuestion from './frontend/screens/QuestionnaireScreens/HeightWeightQuestion';
@@ -9,11 +10,10 @@ import HealthGoalQuestion from './frontend/screens/QuestionnaireScreens/HealthGo
 import ActivityQuestion from './frontend/screens/QuestionnaireScreens/ActivityQuestion';
 import DietaryPrefQuestion from './frontend/screens/QuestionnaireScreens/DietaryPrefQuestion';
 import FoodAllergyQuestion from './frontend/screens/QuestionnaireScreens/FoodAllergyQuestion';
-import HomeScreen from './frontend/screens/HomeScreen';
-import MealDetailsScreen from './frontend/screens/mealPlanScreens/MealDetailsScreen';
-import MealPlanScreen from './frontend/screens/mealPlanScreens/mealPlanScreen';
 import Tabs from './frontend/navigation/BottomTabNavigator';
+import UploadScreen from './frontend/screens/UploadScreen';
 
+import { AppProvider } from "./backend/StreamChat/AppContext";
 
 
 const Stack = createStackNavigator();
@@ -21,9 +21,11 @@ const Stack = createStackNavigator();
 
 export default function App() {
     return (
+      <AppProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="LoginScreen">
           <Stack.Screen name="LoginScreen" component={LoginScreen} options={{headerShown: false}}/>
+          <Stack.Screen name="UsernameQuestion" component={UsernameQuestion} options={{ title: 'Names' }}/>
           <Stack.Screen name="AgeQuestion" component={AgeQuestion} options={{ title: 'Age' }}/>
           <Stack.Screen name="GenderQuestion" component={GenderQuestion} options={{ title: 'Gender' }}/>
           <Stack.Screen name="HeightWeightQuestion" component={HeightWeightQuestion} options={{ title: 'Height & Weight' }}/>
@@ -32,8 +34,9 @@ export default function App() {
           <Stack.Screen name="DietaryPrefQuestion" component={DietaryPrefQuestion} options={{ title: 'Dietary Preferences' }}/>
           <Stack.Screen name="FoodAllergyQuestion" component={FoodAllergyQuestion} options={{ title: 'Food Allergy' }}/>
           <Stack.Screen name="HomeScreen" component={Tabs} options={{ headerShown: false }} />
-        </Stack.Navigator>
-        
+          <Stack.Screen name="UploadScreen" component={UploadScreen} options={{ title: 'Upload' }} />
+        </Stack.Navigator>   
       </NavigationContainer>
+      </AppProvider>
     );
   }

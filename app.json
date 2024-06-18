@@ -6,6 +6,10 @@
     "orientation": "portrait",
     "icon": "./frontend/assets/icon.png",
     "userInterfaceStyle": "light",
+    "permissions": [
+      "CAMERA",
+      "CAMERA_ROLL"
+    ],
     "splash": {
       "image": "./frontend/assets/splash.png",
       "resizeMode": "contain",
@@ -14,8 +18,12 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "We need access to your camera to take photos of your food."
-      }
+        "NSCameraUsageDescription": "We need access to your camera to take photos of your food.",
+        "NSPhotoLibraryUsageDescription": "We need access to your photo library to upload photos",
+        "NSMicrophoneUsageDescription": "We need access to your microphone to record sounds",
+        "NSPhotoLibraryAddUsageDescription": "We need access to your photo library to upload photos"
+      },
+      "bundleIdentifier": "com.ethanmanz.snapshot"
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +35,24 @@
       "favicon": "./frontend/assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "de134c35-8af0-4c1b-833a-4c5a55ee594b"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/de134c35-8af0-4c1b-833a-4c5a55ee594b"
+    }
   }
 }

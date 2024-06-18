@@ -814,7 +814,6 @@ export const maintainHealth_vegetarian_Sodium_MealPlan = () => {
             lunch.tomato_soup_grilled_cheese(),
             lunch.chickpea_salad_sandwich(),
             lunch.chickpea_avocado_sandwich(),
-            lunch.black_bean_sweet_potato_enchiladas()
         ],
 
         dinner: [
@@ -825,7 +824,8 @@ export const maintainHealth_vegetarian_Sodium_MealPlan = () => {
             dinner.eggplant_parmesan_whole_wheat_pasta(),
             dinner.eggplant_stir_fry(),
             dinner.tofu_stir_fry_brown_rice(),
-            dinner.veggie_pizza_whole_wheat_crust()
+            dinner.veggie_pizza_whole_wheat_crust(),
+            dinner.black_bean_sweet_potato_enchiladas()
         ]
     }
 }

@@ -3,7 +3,64 @@ import { supabase } from './supabaseClient';
 import { getUser } from './auth';
 import { assignMealPlan, chooseMealPlan, getMealPlan } from '../mealPlan/mealPlanner'; 
 import updateNutritionalNeeds from '../calorieTracker/nutrition';
-import { CommonActions } from '@react-navigation/native';
+import { StreamChat } from 'stream-chat';
+import { chatApiKey } from '../StreamChat/ChatConfig';
+
+
+//for UsernameQuestion.js
+export const handleName = async (thisFullName, thisUserName, navigation) => {
+  if (thisFullName.trim() === '' || thisUserName.trim() === '') {
+    Alert.alert('Invalid Names', 'Full name and username cannot be empty'); //ensures username and full name is not empty
+    return;
+  }
+
+  try {
+    const session = await getUser();
+    if (!session.data.session) {
+      throw new Error('User not logged in');
+    }
+
+    const user = session.data.session.user;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ username: thisUserName, full_name: thisFullName }) //update username and fullname into supabase
+      .eq('id', user.id);
+
+    // Create user on Stream Chat
+    const client = StreamChat.getInstance(chatApiKey);
+    await client.connectUser(
+      {
+          id: thisUserName,
+          name: thisUserName,
+          image: 'https://getstream.io/random_svg/?name=John',
+      },
+     client.devToken(thisUserName),
+    );
+    client.disconnect()
+    
+    // Generate Stream Chat token
+    //const token = client.devToken(thisUserName);
+
+    // Save token to Supabase
+    //const { error: tokenError } = await supabase
+    //  .from('profiles')
+    //  .update({ auth_token: token })
+    //  .eq('id', user.id);
+
+    //if (tokenError) throw tokenError;
+
+    if (error) {
+      throw error;
+    }
+
+    navigation.navigate('AgeQuestion'); 
+  } catch (error) {
+    Alert.alert('Error', error.message);
+  }
+};
+
+
 
 //for AgeQuestion.js
 export const handleAgeSubmit = async (thisAge, navigation) => {
@@ -202,7 +259,7 @@ export const handlePref = async (thisPref, navigation) => {
   };
 
 //for FoodAllergyQuestion.js
-export const handleAllergy = async (allergy, navigation) => {
+export const handleAllergy = async (allergy) => {
     try {
       if (/\d/.test(allergy)) {
         throw new Error('Invalid input. Allergies cannot contain numbers');
@@ -230,13 +287,6 @@ export const handleAllergy = async (allergy, navigation) => {
       console.log(userData);
       const mealPlan = await chooseMealPlan(userData);
       await assignMealPlan(user.id, mealPlan); //based on all the questions, assign an appropriate meal plan
-
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'HomeScreen' }],
-        })
-      );
 
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -314,7 +364,7 @@ export const handleAllergy = async (allergy, navigation) => {
       .from('daily_intake')
       .select('calories, carbs, proteins, fats')
       .eq('id', userId)
-      .eq('date(created_at)', formattedDate); //checkthe date 
+      .eq('date', formattedDate); //checkthe date 
 
     if (dailyIntakeError) {
       console.error('Error fetching daily intake data:', dailyIntakeError);
@@ -342,7 +392,7 @@ export const fetchDailyIntake = async (userId) => {
   const { data, error } = await supabase
       .from('daily_intake')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .order('date', { ascending: false });
     
   if (error) {
@@ -367,38 +417,43 @@ export const storeDailyIntake = async (dailyIntake) => {
 
 
 export const fetchUserWeeklyAndMonthlyAverages = async (userId) => {
-try {
-  // Fetch weekly averages
   const { data: weeklyData, error: weeklyError } = await supabase
     .rpc('calculate_weekly_averages', { user_id: userId });
 
-  if (weeklyError) {
-    console.error('Error fetching weekly averages:', weeklyError);
-    return { weeklyError };
-  }
-
-  // Fetch monthly averages
   const { data: monthlyData, error: monthlyError } = await supabase
     .rpc('calculate_monthly_averages', { user_id: userId });
 
-  if (monthlyError) {
-    console.error('Error fetching monthly averages:', monthlyError);
-    return { monthlyError };
+    console.log(`Fetching monthly averages for user: ${userId}`);
+  const { data: monthlyWeeklyData, error: monthlyWeeklyError } = await supabase
+    .rpc('calculate_monthly_weekly_averages', { user_id: userId });
+
+  if (weeklyError) {
+    console.error('Error fetching weekly averages:', weeklyError);
   }
 
-  return { weeklyData, monthlyData };
-} catch (error) {
-  console.error('Unexpected error:', error);
-  return { error };
-}
+  if (monthlyError) {
+    console.error('Error fetching monthly averages:', monthlyError);
+  }
+
+  if (monthlyWeeklyError) {
+    console.error('Error fetching monthly weekly averages:', monthlyWeeklyError);
+  }
+
+  return {
+    weeklyData,
+    monthlyData,
+    monthlyWeeklyData,
+    error: weeklyError || monthlyError || monthlyWeeklyError,
+  };
 };
+
 
 //To calculate the amount for each week 
 
 export const fetchUserDailyGoals = async (userId) => {
 try {
   const { data, error } = await supabase
-  .from('user_nutrition') // Assuming the table name is 'user_nutrition'
+  .from('user_nutrition') //table name is 'user_nutrition'
   .select('caloriegoal, carbsgoal, proteingoal, fatsgoal')
   .eq('id', userId)
   .single(); // Assuming you want a single result for the user
@@ -414,6 +469,115 @@ console.error('Unexpected error:', error);
 return null;
 }
 };
+
+
+//for water-intake (ethan code)
+export const fetchUserWaterIntake = async (selectedDate) => {
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) {
+    throw new Error('User not logged in');
+  }
+  const user = session.data.session.user;
+  const userId = user.id;
+
+  const { data, error } = await supabase
+    .from('daily_water_intake')
+    .select('water_intake')
+    .eq('id', userId)
+    .eq('date', selectedDate.toISOString().split('T')[0]);
+
+  if (error) {
+    console.error('Error fetching water intake:', error);
+    return null;
+  }
+
+  return data[0];
+};
+
+//for water-intake (ethan code)
+export const updateUserWaterIntake = async (selectedDate, newIntake) => {
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) {
+    throw new Error('User not logged in');
+  }
+  const user = session.data.session.user;
+  const userId = user.id;
+
+  const { data, error } = await supabase
+    .from('daily_water_intake')
+    .upsert({
+      id: userId,
+      date: selectedDate.toISOString().split('T')[0],
+      water_intake: newIntake
+    });
+
+  if (error) {
+    console.error('Error updating water intake:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const fetchUserImagesForDate = async (date) => {
+  try {
+    // Get user session
+    const session = await supabase.auth.getSession();
+    if (!session.data.session) {
+      throw new Error('User not logged in');
+    }
+    const user = session.data.session.user;
+    const userId = user.id;
+    const formattedDate = date.toISOString().split('T')[0];
+    // Calculate start and end of the day
+    /*const startOfDay = new Date(date);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setUTCHours(23, 59, 59, 999);*/
+
+    console.log(userId);
+    console.log('Formatted Date:', date.toISOString().split('T')[0]);
+
+
+    // Fetch entry IDs for the date
+    const { data: entryIdsData, error: error } = await supabase
+      .from('daily_intake')
+      .select('entry_id')
+      .eq('id', userId)
+      .eq('date', formattedDate)
+      //.gte('created_at', startOfDay.toISOString())
+      //.lte('created_at', endOfDay.toISOString());
+
+    if (error) {
+      throw entryIdsError;
+    }
+    
+    const entryIds = entryIdsData.map(item => item.entry_id);
+    //Console is to check if the entryIds are being taken from the table
+    console.log(entryIdsData.length);
+    if (entryIds.length === 0) {
+      return [];
+    }
+
+    // Fetch images using entry IDs
+    const { data: imagesData, error: imagesError } = await supabase
+      .from('intake_images')
+      .select('image_url')
+      .in('entry_id', entryIds);
+
+    if (imagesError) {
+      throw imagesError;
+    }
+    
+    return imagesData.map(item => item.image_url);
+  } catch (error) {
+    console.error('Error fetching user images:', error.message);
+    return [];
+  }
+};
+
+
+
 
 
 
