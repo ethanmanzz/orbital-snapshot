@@ -1,14 +1,15 @@
 import React, { useState, useContext } from 'react';
-import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, Button, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ChatContext } from 'stream-chat-expo';
-import { Button } from 'react-native-paper';
+import { ChatContext } from 'stream-chat-expo'; 
+import { useAppContext } from '../../../backend/StreamChat/AppContext';
 
 const UserSearchScreen = () => {
   const [searchText, setSearchText] = useState('');
   const [users, setUsers] = useState([]);
   const navigation = useNavigation();
   const { client } = useContext(ChatContext);
+  const { setChannel } = useAppContext();
 
   const searchUsers = async (searchText) => {
     if (!client) {
@@ -37,7 +38,8 @@ const UserSearchScreen = () => {
         members: [client.user.id, selectedUserId]
       });
       await channel.create();
-      navigation.navigate('ChannelScreen', { channel });
+      setChannel(channel);
+      navigation.navigate('ChannelScreen');
     } catch (error) {
       console.error('Error creating private channel:', error);
     }
@@ -46,29 +48,23 @@ const UserSearchScreen = () => {
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.searchInput}
         value={searchText}
         onChangeText={setSearchText}
         placeholder="Input username here"
-        placeholderTextColor="#7F7F7F"
+        style={styles.input}
       />
-      <Button 
-        mode="text" 
-        onPress={() => searchUsers(searchText)} 
-        style={styles.searchButton}
-        labelStyle={{ color: '#4A90E2', fontSize: 16 }}
-      >
-        Search
-      </Button>
+      <TouchableOpacity onPress={() => searchUsers(searchText)} style={styles.searchButton}>
+        <Text style={styles.searchButtonText}>Search</Text>
+      </TouchableOpacity>
       <FlatList
-        style={styles.userList}
         data={users}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.userItem} onPress={() => createPrivateChannel(item.id)}>
-            <Text style={styles.userName}>{item.name}</Text>
+          <TouchableOpacity onPress={() => createPrivateChannel(item.id)} style={styles.userItem}>
+            <Text style={styles.userText}>{item.name}</Text>
           </TouchableOpacity>
         )}
+        style={styles.userList}
       />
     </View>
   );
@@ -77,34 +73,50 @@ const UserSearchScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8EDF3',
     padding: 20,
+    backgroundColor: '#f0f0f0', // Light background color
+    alignItems: 'center', // Center elements horizontally
   },
-  searchInput: {
-    backgroundColor: '#A0AAB8',
-    padding: 15,
-    borderRadius: 10,
+  input: {
+    height: 50,
+    borderColor: '#cccccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 20,
+    paddingHorizontal: 15,
     fontSize: 18,
-    color: '#000',
+    width: '100%',
+    backgroundColor: '#ffffff', // White background for input
   },
   searchButton: {
-    marginTop: 10,
-    alignSelf: 'center',
+    height: 50,
+    backgroundColor: '#4682b4', // Steel blue background for button
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 20,
+    width: '100%',
+  },
+  searchButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   userList: {
-    marginTop: 20,
+    width: '100%',
   },
   userItem: {
-    backgroundColor: '#A0AAB8',
-    padding: 20,
-    marginVertical: 5,
-    borderRadius: 10,
+    padding: 15,
+    borderBottomColor: '#cccccc',
+    borderBottomWidth: 1,
+    backgroundColor: '#ffffff',
+    marginBottom: 10,
+    borderRadius: 5,
   },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+  userText: {
+    fontSize: 18,
   },
 });
 
 export default UserSearchScreen;
+
