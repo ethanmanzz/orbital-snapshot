@@ -39,9 +39,9 @@ const sodiumPlan = (age) => {
 
 export const getMealPlan = (mealPlanType) => {
   switch(mealPlanType) {
-    case 'weightloss-nopref-':
+    case 'weightloss-none-':
         return mealPlans.loseWeight_noPref_Sodium_MealPlan();
-    case 'weightloss_nopref-lowsodium':
+    case 'weightloss-none-lowsodium':
         return mealPlans.loseWeight_noPref_lowSodium_MealPlan();
     case 'weightloss-vegetarian-':
         return mealPlans.loseWeight_vegetarian_Sodium_MealPlan();
@@ -59,9 +59,9 @@ export const getMealPlan = (mealPlanType) => {
         return mealPlans.loseWeight_keto_Sodium_MealPlan();
     case 'weightloss-keto-lowsodium':
         return mealPlans.loseWeight_keto_lowSodium_MealPlan();
-    case 'musclegain-nopref-':
+    case 'musclegain-none-':
         return mealPlans.muscleGain_noPref_Sodium_MealPlan();
-    case 'musclegain_nopref-lowsodium':
+    case 'musclegain-none-lowsodium':
         return mealPlans.muscleGain_noPref_lowSodium_MealPlan();
     case 'musclegain-vegetarian-':
         return mealPlans.muscleGain_vegetarian_Sodium_MealPlan();
@@ -79,9 +79,9 @@ export const getMealPlan = (mealPlanType) => {
         return mealPlans.muscleGain_keto_Sodium_MealPlan();
     case 'musclegain-keto-lowsodium':
         return mealPlans.muscleGain_keto_lowSodium_MealPlan();
-    case 'maintainhealth-nopref-':
+    case 'maintainhealth-none-':
         return mealPlans.maintainHealth_noPref_Sodium_MealPlan();
-    case 'maintainhealth_nopref-lowsodium':
+    case 'maintainhealth-none-lowsodium':
         return mealPlans.maintainHealth_noPref_lowSodium_MealPlan();
     case 'maintainhealth-vegetarian-':
         return mealPlans.maintainHealth_vegetarian_Sodium_MealPlan();
