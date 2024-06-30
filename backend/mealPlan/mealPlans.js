@@ -353,7 +353,6 @@ export const loseWeight_keto_Sodium_MealPlan = () => {
             breakfast.keto_smoothie(),
             breakfast.keto_scramble(),
             breakfast.keto_eggs_benedict(),
-            breakfast.keto_tacos(),
             breakfast.keto_frittata(),
             breakfast.keto_cheese_omelette()
         ],

@@ -6,6 +6,7 @@ import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { fetchUserNutritionData, fetchUserWaterIntake, updateUserWaterIntake, fetchUserImagesForDate } from '../../backend/supabase/database';
 import { getUser } from '../../backend/supabase/auth';
 import { ProgressChart } from 'react-native-chart-kit';
+
  
 const screenWidth = Dimensions.get('window').width;
 
