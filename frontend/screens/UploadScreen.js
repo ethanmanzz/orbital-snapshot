@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, Image, Alert, Dimensions, View, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { ScrollView, Text, Image, Button, Alert, Dimensions, View, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../../backend/supabase/supabaseClient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
 
 const getUserId = async () => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -47,22 +46,20 @@ const UploadScreen = () => {
       const fileName = imageUri.split('/').pop();
       const response = await fetch(imageUri);
       const blob = await response.blob();
-  
+
       const arrayBuffer = await new Response(blob).arrayBuffer();
-      console.log("arrayBuffer", arrayBuffer.byteLength);
-  
       const { data, error } = await supabase.storage
         .from('images')
         .upload(`public/${Date.now()}_${fileName}`, arrayBuffer, {
           contentType: 'image/jpeg',
           upsert: false,
         });
-  
+
       if (error) {
         console.error('Upload error:', error.message);
         return null;
       }
-  
+
       const url = `https://pqwbyjnyiffsgbhjzpof.supabase.co/storage/v1/object/public/images/${data.path}`;
       return { key: data.path, url };
     } catch (error) {
@@ -72,22 +69,8 @@ const UploadScreen = () => {
   };
 
   const analyzeImage = async (imageUrl) => {
-    try {
-      const response = await fetch('http://127.0.0.1:5000/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image_url: imageUrl }),
-      });
-      if (!response.ok) {
-        throw new Error('Image analysis failed');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Analysis error:', error);
-      return null;
-    }
+    // Placeholder for image analysis logic
+    return { calories: 250, proteins: 10, fats: 5, carbs: 20 }; // Example results
   };
 
   const saveAnalysisResults = async (results, selectedDate, mealType) => {
@@ -145,27 +128,24 @@ const UploadScreen = () => {
     setIsAnalysing(true);
     const uploadResult = await uploadImageToSupabase(imageUri);
     console.log("Upload result:", uploadResult);
-
     if (uploadResult) {
-      const imageUrl = uploadResult.url;
-      console.log("Image URL to be analyzed:", imageUrl); 
-      const analysisResults = await analyzeImage(imageUrl);
+      const analysisResults = await analyzeImage(uploadResult.url);
       console.log("Analysis results:", analysisResults);
-      const entryId = await saveAnalysisResults(analysisResults, date, mealType); // Pass the selected date here
+      const entryId = await saveAnalysisResults(analysisResults, date, mealType); // Pass the selected date and meal type here
       if (entryId) {
         const saveResults = await saveImageMetadata(uploadResult.url, entryId, date); 
         console.log('Analysis and save results:', saveResults);
         Alert.alert('Success', 'Analysis completed!', [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('HomeScreen'),
+            onPress: () => navigation.navigate('Home', { refresh: true }), // Navigate back with refresh parameter
           },
         ]);
       } else {
         console.error('Failed to save analysis results.');
       }
     } else {
-        console.error('Failed to upload image.');
+      console.error('Failed to upload image.');
     }
     setIsAnalysing(false);
   };
@@ -257,6 +237,7 @@ const styles = StyleSheet.create({
 });
 
 export default UploadScreen;
+
 
 
 

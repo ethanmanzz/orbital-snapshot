@@ -521,7 +521,6 @@ export const updateUserWaterIntake = async (selectedDate, newIntake) => {
 
 export const fetchUserImagesForDate = async (date) => {
   try {
-    // Get user session
     const session = await supabase.auth.getSession();
     if (!session.data.session) {
       throw new Error('User not logged in');
@@ -529,54 +528,60 @@ export const fetchUserImagesForDate = async (date) => {
     const user = session.data.session.user;
     const userId = user.id;
     const formattedDate = date.toISOString().split('T')[0];
-    // Calculate start and end of the day
-    /*const startOfDay = new Date(date);
-    startOfDay.setUTCHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setUTCHours(23, 59, 59, 999);*/
 
-    console.log(userId);
-    console.log('Formatted Date:', date.toISOString().split('T')[0]);
-
-
-    // Fetch entry IDs for the date
-    const { data: entryIdsData, error: error } = await supabase
+    // Fetch entries and associated images for the date
+    const { data: entriesData, error: entriesError } = await supabase
       .from('daily_intake')
-      .select('entry_id')
+      .select(`
+        meal_type,
+        intake_images(image_url)
+      `)  // Assuming `intake_images` is a related table
       .eq('id', userId)
-      .eq('date', formattedDate)
-      //.gte('created_at', startOfDay.toISOString())
-      //.lte('created_at', endOfDay.toISOString());
+      .eq('date', formattedDate);
 
-    if (error) {
-      throw entryIdsError;
-    }
-    
-    const entryIds = entryIdsData.map(item => item.entry_id);
-    //Console is to check if the entryIds are being taken from the table
-    console.log(entryIdsData.length);
-    if (entryIds.length === 0) {
-      return [];
+    if (entriesError) {
+      throw new Error(`Error fetching entries: ${entriesError.message}`);
     }
 
-    // Fetch images using entry IDs
-    const { data: imagesData, error: imagesError } = await supabase
-      .from('intake_images')
-      .select('image_url')
-      .in('entry_id', entryIds);
+    // Flatten entries data to create a list of { meal_type, image_url } pairs
+    const imageList = entriesData.flatMap(entry => 
+      entry.intake_images.map(image => ({
+        meal_type: entry.meal_type,
+        image_url: image.image_url
+      }))
+    );
 
-    if (imagesError) {
-      throw imagesError;
-    }
-    
-    return imagesData.map(item => item.image_url);
+    return imageList;
   } catch (error) {
     console.error('Error fetching user images:', error.message);
     return [];
   }
 };
 
+// To calculat the number of each type of meals over a weekly and monthly time span.
+export const fetchMealCounts = async (userId, period = 'weekly') => {
+  console.log(supabase.from('daily_intake'));
 
+  try {
+    const { data, error } = await supabase.rpc(period === 'weekly' ? 'fetch_weekly_meal_counts' : 'fetch_monthly_meal_counts', { user_id: userId });
+
+    if (error) {
+      throw error;
+    }
+
+    const mealCounts = {
+      Breakfast: data[0],
+      Lunch: data[1],
+      Dinner: data[2],
+      Snack: data[3]
+    };
+
+    return mealCounts;
+  } catch (error) {
+    console.error('Error fetching meal counts:', error.message);
+    return { error: error.message };
+  }
+}; 
 
 
 
