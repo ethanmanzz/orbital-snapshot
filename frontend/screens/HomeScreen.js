@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, Button, Dimensions, Im
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { fetchUserNutritionData, fetchUserWaterIntake, updateUserWaterIntake, fetchUserImagesForDate } from '../../backend/supabase/database';
+import { fetchUserNutritionData, fetchUserWaterIntake, updateUserWaterIntake, fetchUserImagesForDate, fetchUserName } from '../../backend/supabase/database';
 import { ProgressChart } from 'react-native-chart-kit';
 
 const screenWidth = Dimensions.get('window').width;
@@ -16,6 +16,7 @@ const HomeScreen = ({ navigation, route }) => {
   const [waterIntake, setWaterIntake] = useState(0);
   const [userImages, setUserImages] = useState([]);
   const [refreshData, setRefreshData] = useState(false); // State to trigger data refresh
+  const [userName, setUserName] = useState('');
 
   const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
@@ -93,12 +94,17 @@ const HomeScreen = ({ navigation, route }) => {
     fetchNutritionData(date);
     fetchWaterIntake(date);
     fetchUserImages(date);
+    const getUserName = async () => {
+      const name = await fetchUserName();
+      setUserName(name.username);
+    };
+    getUserName();
   }, [date, refreshData]);
 
   const getProgressData = (current, goal) => {
     return current / goal;
   };
-
+  
   const progressData = {
     labels: ["Calories", "Protein", "Fats", "Carbs"],
     data: nutritionData
@@ -126,7 +132,7 @@ const HomeScreen = ({ navigation, route }) => {
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View style={styles.header}>
-          <Text style={styles.title}>Hello Snapshot!</Text>
+          <Text style={styles.title}>Hello {userName}!</Text>
           <TouchableOpacity onPress={handleCameraPress}>
             <Ionicons name="camera" size={24} color="black" />
           </TouchableOpacity>

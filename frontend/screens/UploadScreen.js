@@ -69,8 +69,22 @@ const UploadScreen = () => {
   };
 
   const analyzeImage = async (imageUrl) => {
-    // Placeholder for image analysis logic
-    return { calories: 250, proteins: 10, fats: 5, carbs: 20 }; // Example results
+    try {
+      const response = await fetch('http://127.0.0.1:5000/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image_url: imageUrl }),
+      });
+      if (!response.ok) {
+        throw new Error('Image analysis failed');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Analysis error:', error);
+      return null;
+    }
   };
 
   const saveAnalysisResults = async (results, selectedDate, mealType) => {

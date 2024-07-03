@@ -335,8 +335,6 @@ export const handleAllergy = async (allergy) => {
   };
   
 
-
-  //jwong code
   export async function fetchUserNutritionData(date) {
     const session = await supabase.auth.getSession();
     if (!session.data.session) {
@@ -471,7 +469,7 @@ return null;
 };
 
 
-//for water-intake (ethan code)
+//for water-intake 
 export const fetchUserWaterIntake = async (selectedDate) => {
   const session = await supabase.auth.getSession();
   if (!session.data.session) {
@@ -494,7 +492,7 @@ export const fetchUserWaterIntake = async (selectedDate) => {
   return data[0];
 };
 
-//for water-intake (ethan code)
+//for water-intake
 export const updateUserWaterIntake = async (selectedDate, newIntake) => {
   const session = await supabase.auth.getSession();
   if (!session.data.session) {
@@ -558,7 +556,7 @@ export const fetchUserImagesForDate = async (date) => {
   }
 };
 
-// To calculat the number of each type of meals over a weekly and monthly time span.
+// To calculate the number of each type of meals over a weekly and monthly time span.
 export const fetchMealCounts = async (userId, period = 'weekly') => {
   console.log(supabase.from('daily_intake'));
 
@@ -585,9 +583,23 @@ export const fetchMealCounts = async (userId, period = 'weekly') => {
 
 
 
-
-
-
+//get user's username
+export const fetchUserName = async () => {
+  const { data: { user } } = await supabase.auth.getUser(); 
+  if (user) {
+      const { data, error } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+      
+      if (data && !error) {
+          return data;
+      } else {
+          console.error('Error fetching username:', error);
+      }
+  }
+};
 
 
 
