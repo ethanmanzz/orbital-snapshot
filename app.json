@@ -34,7 +34,7 @@
         "android.permission.RECORD_AUDIO"
       ]
     },
-    "developmentClient": true,
+    "developmentClient": {},
     "web": {
       "favicon": "./frontend/assets/favicon.png"
     },

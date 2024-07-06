@@ -40,7 +40,7 @@ const ChatStack = () => {
 
   return (
     <OverlayProvider>
-      <Chat client={chatClient} enableOfflineSupport>
+      <Chat client={chatClient}>
         <Stack.Navigator>
           <Stack.Screen name="ChannelListScreen" component={ChannelListScreen} options={({ navigation }) => ({ 
             title: 'Chats',

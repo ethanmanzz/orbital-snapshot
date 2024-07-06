@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Button, Dimensions, Image, Alert, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { fetchUserNutritionData, fetchUserWaterIntake, updateUserWaterIntake, fetchUserImagesForDate, fetchUserName } from '../../backend/supabase/database';
 import { ProgressChart } from 'react-native-chart-kit';
 
@@ -24,36 +24,41 @@ const HomeScreen = ({ navigation, route }) => {
     setModalVisible(true);
   };
 
-  const takePhotoFromCamera = () => {
-    launchCamera(
-      { mediaType: 'photo', includeBase64: false, saveToPhotos: true },
-      (response) => {
-        if (response.didCancel) {
-          console.log('User cancelled image picker');
-        } else if (response.error) {
-          console.log('Error: ', response.error);
-        } else {
-          console.log(response.uri);
-          navigation.navigate('UploadScreen', { photoUri: response.uri });
-        }
-      }
-    );
+  const takePhotoFromCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'You need to grant camera permissions to use this feature.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.cancelled) {
+      console.log(result.uri);
+      navigation.navigate('UploadScreen', { photoUri: result.uri });
+    }
   };
 
-  const choosePhotoFromLibrary = () => {
-    launchImageLibrary(
-      { mediaType: 'photo', includeBase64: false, selectionLimit: 0 },
-      (response) => {
-        if (response.didCancel) {
-          console.log('User cancelled image picker');
-        } else if (response.error) {
-          console.log('ImagePicker Error: ', response.error);
-        } else if (response.assets) {
-          console.log('Selected images from library:', response.assets);
-          navigation.navigate('UploadScreen', { selectedImages: response.assets });
-        }
-      }
-    );
+  const choosePhotoFromLibrary = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'You need to grant library permissions to use this feature.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+      // ensures allowsMultipleSelection is not enabled
+    });
+    if (!result.cancelled) {
+      console.log('Selected images from library:', result.assets);
+      navigation.navigate('UploadScreen', { selectedImages: result.assets });
+    }
   };
 
   const handleDateChange = (event, selectedDate) => {
@@ -127,6 +132,7 @@ const HomeScreen = ({ navigation, route }) => {
       </View>
     ));
   };
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -344,33 +350,3 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, Image, Button, Alert, Dimensions, View, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { ScrollView, Text, Image, Alert, Dimensions, View, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';

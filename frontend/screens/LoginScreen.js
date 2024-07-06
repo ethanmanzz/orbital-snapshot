@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, ImageBackground, TouchableWithoutFeedback, Keyboard } from 'react-native'; 
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import Animated, { Easing, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { signIn, signUp } from '../../backend/supabase/auth';
 
 export default function LoginScreen({ navigation }) {
@@ -8,28 +9,29 @@ export default function LoginScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
 
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(-50)).current;
+    const fadeAnim = useSharedValue(0);
+    const slideAnim = useSharedValue(-50);
 
     useEffect(() => {
-        Animated.parallel([ //run animations in parallel
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 2000,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 2000,
-                useNativeDriver: true,
-            }),
-        ]).start();
+        fadeAnim.value = withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) });
+        slideAnim.value = withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.ease) });
     }, [fadeAnim, slideAnim]);
+
+    const fadeStyle = useAnimatedStyle(() => {
+        return {
+            opacity: fadeAnim.value,
+        };
+    });
+
+    const slideStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ translateY: slideAnim.value }],
+        };
+    });
 
     const handleAuth = async () => {
         setLoading(true);
         if (isSignUp) {
-            // Sign-up logic
             const { user, error } = await signUp(email, password);
             if (!error) {
                 navigation.reset({
@@ -38,7 +40,6 @@ export default function LoginScreen({ navigation }) {
                 });
             }
         } else {
-            // Login logic
             const { user, error } = await signIn(email, password);
             if (!error) {
                 navigation.reset({
@@ -51,44 +52,44 @@ export default function LoginScreen({ navigation }) {
     };
 
     return (
-    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-      <View style={{ flex: 1 }}>
-      <ImageBackground source={require('../../frontend/assets/backgrounds/login_background.png')} style={styles.background}>
-        <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-          <Animated.Image 
-            source={require('../../frontend/assets/snapshot_logo.png')}
-            style={[styles.logo, { transform: [{ translateY: slideAnim }] }]}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#999"
-            value={email}
-            onChangeText={(text) => setEmail(text)}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#999"
-            value={password}
-            onChangeText={(text) => setPassword(text)}
-            secureTextEntry
-          />
-          <TouchableOpacity style={styles.button} onPress={handleAuth} disabled={loading}>
-            <Text style={styles.buttonText}>{loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Login'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
-            <Text style={styles.toggleText}>
-              {isSignUp ? 'Already have an account? Login' : "Don't have an account? Sign Up"}
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </ImageBackground>
-      </View>
-    </TouchableWithoutFeedback>
-  );
+        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+            <View style={{ flex: 1 }}>
+                <ImageBackground source={require('../../frontend/assets/backgrounds/login_background.png')} style={styles.background}>
+                    <Animated.View style={[styles.container, fadeStyle]}>
+                        <Animated.Image
+                            source={require('../../frontend/assets/snapshot_logo.png')}
+                            style={[styles.logo, slideStyle]}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email"
+                            placeholderTextColor="#999"
+                            value={email}
+                            onChangeText={(text) => setEmail(text)}
+                            autoCapitalize="none"
+                            keyboardType="email-address"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Password"
+                            placeholderTextColor="#999"
+                            value={password}
+                            onChangeText={(text) => setPassword(text)}
+                            secureTextEntry
+                        />
+                        <TouchableOpacity style={styles.button} onPress={handleAuth} disabled={loading}>
+                            <Text style={styles.buttonText}>{loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Login'}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
+                            <Text style={styles.toggleText}>
+                                {isSignUp ? 'Already have an account? Login' : "Don't have an account? Sign Up"}
+                            </Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                </ImageBackground>
+            </View>
+        </TouchableWithoutFeedback>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.7)', // Semi-transparent background to enhance readability
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
         padding: 20,
     },
     logo: {
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginBottom: 20,
         paddingHorizontal: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)', // Background for text inputs to enhance readability
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
     },
     button: {
         backgroundColor: '#5c85d6',
