@@ -1,7 +1,17 @@
 from flask import Flask, request, jsonify
-import foodvisorAPI # Import your foodvisorAPI.py functions
+import foodvisorAPI  # Import your foodvisorAPI.py functions
+import logging
+import sys
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+
+
+@app.route('/', methods=['GET'])
+def home():
+    return "Hello, AWS Elastic Beanstalk!"
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -20,5 +30,6 @@ def analyze():
         app.logger.error(f'Error analyzing image: {e}')
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0', port=8000)
+
