@@ -24,7 +24,7 @@ const Stack = createStackNavigator();
 const MealPlanStack = () => {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="MealPlanScreen" component={MealPlanScreen} options={{ title: "Meal Plans" }} />
+      <Stack.Screen name="MealPlanScreen" component={MealPlanScreen} options={{ title: "Meal Plans", headerShown: false}} />
       <Stack.Screen name="MealDetailsScreen" component={MealDetailsScreen} options={{ title: "Meal Details" }} />
     </Stack.Navigator>
   );
@@ -77,8 +77,8 @@ const Tabs = () => {
         tabBarInactiveTintColor: 'gray',
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Progress" component={ProgressScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Tab.Screen name="Progress" component={ProgressScreen} options={{ headerShown: false }}/>
       <Tab.Screen name="Meal Plans" component={MealPlanStack} options={{ tabBarBadge: 3, headerShown: false }} />
       <Tab.Screen name="Chat" component={ChatStack} options={{ headerShown: false }} />
     </Tab.Navigator>

@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, Button, Dimensions, Im
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import { fetchUserNutritionData, fetchUserWaterIntake, updateUserWaterIntake, fetchUserImagesForDate, fetchUserName } from '../../backend/supabase/database';
+import { fetchUserNutritionData, fetchUserWaterIntake, updateUserWaterIntake, fetchUserImagesForDate, fetchUserName, setupRealTimeSubscriptionForImages, setupRealTimeSubscription} from '../../backend/supabase/database';
 import { ProgressChart } from 'react-native-chart-kit';
+import Svg, { Rect } from 'react-native-svg'; 
+import { getUser } from '../../backend/supabase/auth'; 
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -39,6 +41,7 @@ const HomeScreen = ({ navigation, route }) => {
     if (!result.cancelled) {
       console.log(result.uri);
       navigation.navigate('UploadScreen', { photoUri: result.uri });
+      setModalVisible(false); // close modal after taking photo
     }
   };
 
@@ -104,10 +107,45 @@ const HomeScreen = ({ navigation, route }) => {
       setUserName(name.username);
     };
     getUserName();
-  }, [date, refreshData]);
 
+    const setupSubscriptions = async () => {
+      const session = await getUser();
+      if (!session.data.session) {
+        throw new Error('User not logged in');
+      }
+
+      const user = session.data.session.user;
+
+      const unsubscribeImages = await setupRealTimeSubscriptionForImages(user.id, date, (updatedImageList) => {
+        console.log('Updated image list received:', updatedImageList); // Debugging log
+        setUserImages(updatedImageList);
+      });
+
+      const unsubscribeNutrition = await setupRealTimeSubscription(user.id, (updatedNutritionData) => {
+        console.log('Updated nutrition data received:', updatedNutritionData); // Debugging log
+        setNutritionData(updatedNutritionData.nutritionData);
+      });
+
+      return () => {
+        unsubscribeImages;
+        unsubscribeNutrition;
+      };
+    };
+
+    const unsubscribe = setupSubscriptions();
+
+    return () => {
+      unsubscribe.then(({ unsubscribeImages, unsubscribeNutrition }) => {
+        if (unsubscribeImages) unsubscribeImages();
+        if (unsubscribeNutrition) unsubscribeNutrition();
+      }).catch(error => {
+        console.error('Error unsubscribing:', error);
+      });
+    };
+  }, [date, refreshData]);
+  
   const getProgressData = (current, goal) => {
-    return current / goal;
+    return Math.min(current / goal, 1);
   };
   
   const progressData = {
@@ -133,18 +171,46 @@ const HomeScreen = ({ navigation, route }) => {
     ));
   };
 
+  const Bar = ({ label, value, goal, color, unit }) => {
+    const widthPercentage = (value / goal) * 100;
+    return (
+      <View style={styles.barContainer}>
+        <Text style={styles.barLabel}>{label}</Text>
+        <Svg height="15" width="80%">
+          <Rect
+            x="0"
+            y="0"
+            width={`${widthPercentage}%`}
+            height="20"
+            fill={color}
+          />
+          <Rect
+            x={`${widthPercentage}%`}
+            y="0"
+            width={`${100 - widthPercentage}%`}
+            height="20"
+            fill="#ddd"
+          />
+        </Svg>
+        <View style={styles.barValueContainer}>
+          <Text style={styles.barValue}>{Math.round(value)}</Text>
+          <Text style={styles.barGoal}>/ {goal + " " + unit}</Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Hello {userName}!</Text>
-          <TouchableOpacity onPress={handleCameraPress}>
+      <View style={styles.header}>
+        <Text style={styles.title}>{userName}'s Home Page</Text>
+          <TouchableOpacity onPress={handleCameraPress} style={styles.cameraIconWrapper}>
             <Ionicons name="camera" size={24} color="black" />
           </TouchableOpacity>
-        </View>
+      </View>
+      <ScrollView contentContainerStyle = {styles.container}>
         <View style={styles.dateContainer}>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateTouchable}>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateTouchable} >
             <Ionicons name="calendar" size={20} color="gray" />
             <Text style={styles.date}>{date.toDateString()}</Text>
           </TouchableOpacity>
@@ -159,29 +225,41 @@ const HomeScreen = ({ navigation, route }) => {
         </View>
         <View style={styles.content}>
           <Text style={styles.chartTitle}>Nutrition Progress</Text>
-          <ProgressChart
-            data={progressData}
-            width={screenWidth - 40}
-            height={220}
-            strokeWidth={16}
-            radius={32}
-            chartConfig={{
-              backgroundColor: '#e26a00',
-              backgroundGradientFrom: '#fb8c00',
-              backgroundGradientTo: '#ffa726',
-              decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              style: {
-                borderRadius: 16,
-              },
-              propsForLabels: {
-                fontSize: 12,
-              },
-            }}
-            hideLegend={false}
-            style={styles.chart}
-          />
+          <View style={styles.chartContainer}>
+            <ProgressChart
+              data={progressData}
+              width={screenWidth - 40}
+              height={240}
+              strokeWidth={12}
+              radius={30}
+              chartConfig={{
+                backgroundColor: '#3146FF',
+                backgroundGradientFrom: 'skyblue',
+                backgroundGradientTo: '#3146FF',
+                decimalPlaces: 2,
+                color: (opacity = 1) => `rgba(237, 243, 234, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                },
+                propsForLabels: {
+                  fontSize: 11,
+                },
+              }}
+              hideLegend={false}
+              style={styles.chart}
+            />
+          </View>
+          {nutritionData ? (
+            <View style={styles.overlayBox}>
+              <Bar label="Calories  :" value={nutritionData.currentcalories} goal={nutritionData.caloriegoal} color="red" unit="kcal" />
+              <Bar label="Protein   :" value={nutritionData.currentprotein} goal={nutritionData.proteingoal} color="green" unit="g" />
+              <Bar label="Fats         :" value={nutritionData.currentfats} goal={nutritionData.fatsgoal} color="blue" unit="g" />
+              <Bar label="Carbs     :" value={nutritionData.currentcarbs} goal={nutritionData.carbsgoal} color="orange" unit="g" />
+            </View>
+          ) : (
+            <Text style={styles.loadingText}>Loading nutrition data...</Text>
+          )}
         </View>
         <View style={styles.waterIntakeContainer}>
           <Text style={styles.waterIntakeTitle}>Water Intake</Text>
@@ -199,7 +277,7 @@ const HomeScreen = ({ navigation, route }) => {
             ))}
           </View>
           <TouchableOpacity onPress={handleAddWater} style={styles.addButton}>
-            <Text style={styles.addButtonText}>Add Cup</Text>
+            <Text style={styles.addButtonText}>Add Cup (250ml)</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.imagesContainer}>
@@ -232,20 +310,48 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
+    alignItems: 'center', 
+    paddingTop: 60,
+    paddingHorizontal: 20, 
+    paddingBottom: 30, 
+    backgroundColor: '#1E90FF',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+  },
+  container: {
+    flexGrow: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+    alignItems: 'stretch',
+  },
+  cameraIconWrapper: {
+    width: 40, 
+    height: 40,
+    borderRadius: 20, 
+    backgroundColor: 'white', 
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingRight: 0, 
   },
   content: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 10,
+    
   },
   chartTitle: {
-    fontSize: 18,
+    fontSize: 22,
     marginBottom: 10,
+    fontWeight: 'bold',
+  },
+  chartContainer: {
+    alignItems: 'center',
+    marginBottom: 4, 
   },
   chart: {
     marginVertical: 8,
@@ -256,8 +362,10 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   waterIntakeTitle: {
-    fontSize: 18,
+    fontSize: 22,
+    marginTop: 15,
     marginBottom: 10,
+    fontWeight: 'bold',
   },
   waterCupsContainer: {
     flexDirection: 'row',
@@ -267,7 +375,7 @@ const styles = StyleSheet.create({
   cupIcon: {
     width: 40,
     height: 40,
-    marginHorizontal: 5,
+    marginHorizontal: 2,
   },
   addButton: {
     backgroundColor: '#3b5998',
@@ -297,8 +405,9 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   imagesTitle: {
-    fontSize: 18,
+    fontSize: 22,
     marginBottom: 10,
+    fontWeight: 'bold',
   },
   uploadedImage: {
     width: 300,
@@ -347,6 +456,49 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
   },
+  overlayBox: {
+    backgroundColor: '#6084cb',
+    padding: 9,
+    borderRadius: 10,
+    elevation: 3,
+    marginTop: 3,
+    marginLeft: 60,
+    marginRight: 60,
+    marginHorizontal: 20
+  },
+  barContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+    paddingLeft: 20,
+    paddingRight: 150,
+  },
+  barLabel: {
+    fontSize: 14,
+    marginRight: 10,
+    width: 70, 
+    fontWeight: 'bold'
+  },
+  barValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  barValue: {
+    fontSize: 13,
+    fontWeight: 'bold'
+  },
+  barGoal: {
+    marginLeft: 5,
+    fontSize: 12,
+    color: 'black',
+  },
+  loadingText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#888',
+  },
+
 });
 
 export default HomeScreen;

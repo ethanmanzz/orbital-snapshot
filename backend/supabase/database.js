@@ -38,17 +38,6 @@ export const handleName = async (thisFullName, thisUserName, navigation) => {
      client.devToken(thisUserName),
     );
     client.disconnect()
-    
-    // Generate Stream Chat token
-    //const token = client.devToken(thisUserName);
-
-    // Save token to Supabase
-    //const { error: tokenError } = await supabase
-    //  .from('profiles')
-    //  .update({ auth_token: token })
-    //  .eq('id', user.id);
-
-    //if (tokenError) throw tokenError;
 
     if (error) {
       throw error;
@@ -556,6 +545,23 @@ export const fetchUserImagesForDate = async (date) => {
   }
 };
 
+//Function to retrieve the data for each day in the past week
+export const fetchUserDailyIntake = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('calculate_daily_averages', { user_id: userId });
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching daily intake:', error.message);
+    return { error: error.message };
+  }
+};
+
 // To calculate the number of each type of meals over a weekly and monthly time span.
 export const fetchMealCounts = async (userId, period = 'weekly') => {
   console.log(supabase.from('daily_intake'));
@@ -581,7 +587,70 @@ export const fetchMealCounts = async (userId, period = 'weekly') => {
   }
 }; 
 
+export const setupRealTimeSubscription = async (userId, updateCallback) => {
+  console.log('Setting up real-time subscription for user:', userId); // Debugging log
 
+  const channel = supabase
+    .channel('realtime daily_intake')
+    .on('postgres_changes', {
+      //event: ['INSERT', 'UPDATE'],
+      event: '*',
+      schema: 'public',
+      table: 'daily_intake',
+      filter: `id=eq.${userId}`
+    }, async payload => {
+      console.log('Real-time event received in database.js:', payload); // Debugging log
+
+      // Re-fetch data or perform calculations here
+      const [mealCounts, averages, dailyIntake, nutritionData] = await Promise.all([
+        fetchMealCounts(userId, 'weekly'),
+        fetchUserWeeklyAndMonthlyAverages(userId),
+        fetchUserDailyIntake(userId),
+        fetchUserNutritionData(new Date())
+      ]);
+
+      updateCallback({
+        mealCounts,
+        weeklyData: averages.weeklyData,
+        monthlyData: averages.monthlyData,
+        monthlyWeeklyData: averages.monthlyWeeklyData,
+        dailyIntakeData: dailyIntake,
+        nutritionData: nutritionData
+      });
+    })
+    .subscribe();
+
+  return () => {
+    console.log('Removing channel subscription in database.js'); // Debugging log
+    supabase.removeChannel(channel);
+  };
+};
+
+//Real-time for images 
+export const setupRealTimeSubscriptionForImages = async (userId, date, updateCallback) => {
+  console.log('Setting up real-time subscription for user images:', userId); // Debugging log
+
+  const channel = supabase
+    .channel('realtime daily_intake')
+    .on('postgres_changes', {
+      event: 'INSERT',  
+      schema: 'public',
+      table: 'daily_intake',
+      filter: `id=eq.${userId}`
+    }, async payload => {
+      console.log('Real-time event received for images:', payload); // Debugging log
+
+      // Re-fetch data or perform calculations here
+      const updatedImageList = await fetchUserImagesForDate(date);
+      updateCallback(updatedImageList);
+    })
+    .subscribe();
+
+  return () => {
+    console.log('Removing channel subscription for images'); // Debugging log
+    supabase.removeChannel(channel);
+  };
+};
 
 //get user's username
 export const fetchUserName = async () => {
@@ -602,6 +671,33 @@ export const fetchUserName = async () => {
 };
 
 
+//Check if a meal has been logged
+export const isMealLogged = async (mealType, date) => {
+  const { data: { user }, error: authError } = await supabase.auth.getUser(); 
+
+  if (authError) {
+    console.error('Error fetching authenticated user:', authError);
+    return false;
+  }
+
+  if (user) {
+    const { data, error } = await supabase
+      .from('daily_intake')
+      .select('*')
+      .eq('meal_type', mealType)
+      .eq('date', date)
+      .eq('id', userId)
+
+    if (error) {
+      console.error('Error fetching meal logs:', error);
+      return false;
+    }
+
+    return data.length > 0;
+  }
+
+  return false;
+};
 
 
 
