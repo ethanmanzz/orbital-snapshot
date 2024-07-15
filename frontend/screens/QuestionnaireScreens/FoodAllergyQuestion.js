@@ -8,10 +8,7 @@ export default function FoodAllergyQuestion({ navigation }) {
 
   const updateAllergy = async () => {
     await handleAllergy(allergy);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'HomeScreen' }],
-     });
+    navigation.navigate('ChatQuestion');
 
   };
   

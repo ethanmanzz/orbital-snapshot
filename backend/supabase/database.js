@@ -29,6 +29,7 @@ export const handleName = async (thisFullName, thisUserName, navigation) => {
 
     // Create user on Stream Chat
     const client = StreamChat.getInstance(chatApiKey);
+    console.log('StreamChat Client:', client);
     await client.connectUser(
       {
           id: thisUserName,
@@ -38,7 +39,7 @@ export const handleName = async (thisFullName, thisUserName, navigation) => {
      client.devToken(thisUserName),
     );
     client.disconnect()
-
+    
     if (error) {
       throw error;
     }
@@ -281,6 +282,71 @@ export const handleAllergy = async (allergy) => {
       Alert.alert('Error', error.message);
     }
   };
+
+//for ChatQuestion.js
+export const handleChat = async (selectedChats) => {
+  const chatClient = StreamChat.getInstance(chatApiKey);
+  const session = await supabase.auth.getSession();
+
+  if (!session.data.session) {
+    throw new Error('User not logged in');
+  }
+
+  const user = session.data.session.user;
+  const userId = user.id;
+
+  // Use the fetchUserName function to get the username
+  const { username: userName } = await fetchUserName();
+  console.log(userName)
+  // Connect as admin user
+  await chatClient.connectUser(
+    {
+      id: 'Admin1',
+      name: 'Admin1',
+    },
+    chatClient.devToken('Admin1')
+  );
+
+  // Mapping of friendly chat names to actual channel IDs
+  const chatIds = {
+    'Food Recommendations': 'FOOD-RECCO-SHARINGS',
+    'Exercise': 'EXERCISE',
+    'Social Gatherings': 'HANGOUT-SESSIONS',
+    'Recipe Sharing': 'FOOD-RECIPES',
+    'Casual Chit-Chat': 'CASUAL-TALKING'
+  };
+
+  const promises = selectedChats.map(async (chat) => {
+    const chatId = chatIds[chat];
+    if (!chatId) {
+      throw new Error(`Invalid chat id for selected chat: ${chat}`);
+    }
+    const channel = chatClient.channel('messaging', chatId);
+
+    await channel.addMembers([userName]);
+    return channel.watch();
+  });
+
+  await Promise.all(promises);
+
+  // Disconnect the admin user after adding the member
+  await chatClient.disconnectUser();
+
+  // Reconnect as the actual user
+  await chatClient.connectUser(
+    {
+      id: userName,
+      name: userName,
+    },
+    chatClient.devToken(userName)
+  );
+
+  // Optionally, you can disconnect the actual user if there's no need to stay connected
+  await chatClient.disconnectUser();
+};
+
+
+
 
   export async function fetchUserQuestionnaireData() {
     const session = await supabase.auth.getSession();

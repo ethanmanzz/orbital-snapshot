@@ -7,7 +7,7 @@ export default function UsernameQuestion({ navigation }) {
   const [fullName, setFullName] = useState('');
   const [userName, setUserName] = useState('');
 
-  const updateGender = () => {
+  const updateName = () => {
     handleName(fullName, userName, navigation);
   };
 
@@ -32,7 +32,7 @@ export default function UsernameQuestion({ navigation }) {
               value={userName}
               onChangeText={setUserName}
             />
-        <TouchableOpacity style={styles.button} onPress={updateGender}>
+        <TouchableOpacity style={styles.button} onPress={updateName}>
               <Text style={styles.buttonText}>Submit</Text>
             </TouchableOpacity>
         </View>

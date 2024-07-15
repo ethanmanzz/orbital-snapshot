@@ -246,7 +246,7 @@ const ProgressScreen = () => {
         </Text>
       </View>
       <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{`Average ${selectedGraph.charAt(0).toUpperCase() + selectedGraph.slice(1)} Intake`}</Text>
+        <Text style={styles.chartTitle}>{`Average ${selectedGraph.charAt(0).toUpperCase() + selectedGraph.slice(1)} Intake Per Meal`}</Text>
         <BarChart
           style={styles.chartStyle}
           data={data}

@@ -12,6 +12,7 @@ import DietaryPrefQuestion from './frontend/screens/QuestionnaireScreens/Dietary
 import FoodAllergyQuestion from './frontend/screens/QuestionnaireScreens/FoodAllergyQuestion';
 import Tabs from './frontend/navigation/BottomTabNavigator';
 import UploadScreen from './frontend/screens/UploadScreen';
+import ChatQuestion from './frontend/screens/QuestionnaireScreens/ChatQuestion';
 
 import { AppProvider } from "./backend/StreamChat/AppContext";
 
@@ -33,6 +34,7 @@ export default function App() {
           <Stack.Screen name="ActivityQuestion" component={ActivityQuestion} options={{ title: 'Activity Factor' }}/>
           <Stack.Screen name="DietaryPrefQuestion" component={DietaryPrefQuestion} options={{ title: 'Dietary Preferences' }}/>
           <Stack.Screen name="FoodAllergyQuestion" component={FoodAllergyQuestion} options={{ title: 'Food Allergy' }}/>
+          <Stack.Screen name="ChatQuestion" component={ChatQuestion} options={{ title: 'Interests' }}/>
           <Stack.Screen name="HomeScreen" component={Tabs} options={{ headerShown: false }} />
           <Stack.Screen name="UploadScreen" component={UploadScreen} options={{ title: 'Upload' }} />
         </Stack.Navigator>   
