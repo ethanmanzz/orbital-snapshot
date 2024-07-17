@@ -2,6 +2,7 @@ import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './frontend/screens/LoginScreen';
+import UploadScreen from './frontend/screens/UploadScreen';
 import UsernameQuestion from './frontend/screens/QuestionnaireScreens/UsernameQuestion';
 import AgeQuestion from './frontend/screens/QuestionnaireScreens/AgeQuestion';
 import GenderQuestion from './frontend/screens/QuestionnaireScreens/GenderQuestion';
@@ -10,9 +11,9 @@ import HealthGoalQuestion from './frontend/screens/QuestionnaireScreens/HealthGo
 import ActivityQuestion from './frontend/screens/QuestionnaireScreens/ActivityQuestion';
 import DietaryPrefQuestion from './frontend/screens/QuestionnaireScreens/DietaryPrefQuestion';
 import FoodAllergyQuestion from './frontend/screens/QuestionnaireScreens/FoodAllergyQuestion';
-import Tabs from './frontend/navigation/BottomTabNavigator';
-import UploadScreen from './frontend/screens/UploadScreen';
 import ChatQuestion from './frontend/screens/QuestionnaireScreens/ChatQuestion';
+import Tabs from './frontend/navigation/BottomTabNavigator';
+
 
 import { AppProvider } from "./backend/StreamChat/AppContext";
 

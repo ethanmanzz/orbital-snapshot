@@ -767,20 +767,210 @@ export const isMealLogged = async (mealType, date) => {
 
 
 
+//for Awards and Badges
+export async function fetchNutritionBadgeData(year, month) {
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) {
+    throw new Error('User not logged in');
+  }
+  const user = session.data.session.user;
+  const userId = user.id;
 
+  const { data: userNutrition, error: userNutritionError } = await supabase
+    .from('user_nutrition')
+    .select('caloriegoal, carbsgoal, proteingoal, fatsgoal')
+    .eq('id', userId)
+    .single();
 
+  if (userNutritionError) {
+    console.error('Error fetching user nutrition data:', userNutritionError);
+    return null;
+  }
 
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0);
 
-    
+  const { data: dailyIntake, error: dailyIntakeError } = await supabase
+    .from('daily_intake')
+    .select('date, calories, carbs, proteins, fats')
+    .eq('id', userId)
+    .gte('date', startDate.toISOString().split('T')[0])
+    .lte('date', endDate.toISOString().split('T')[0]);
 
+  if (dailyIntakeError) {
+    console.error('Error fetching daily intake data:', dailyIntakeError);
+    return null;
+  }
 
+  const daysMeetingGoals = dailyIntake.reduce((count, entry) => {
+    const withinCalorieRange = Math.abs(entry.calories - userNutrition.caloriegoal) <= 100;
+    const withinCarbsRange = Math.abs(entry.carbs - userNutrition.carbsgoal) <= 3;
+    const withinProteinRange = Math.abs(entry.proteins - userNutrition.proteingoal) <= 3;
+    const withinFatsRange = Math.abs(entry.fats - userNutrition.fatsgoal) <= 3;
 
+    if (withinCalorieRange && withinCarbsRange && withinProteinRange && withinFatsRange) {
+      return count + 1;
+    }
+    return count;
+  }, 0);
 
+  return daysMeetingGoals;
+}
 
+export async function fetchCalorificBadgeData(year, month) {
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) {
+    throw new Error('User not logged in');
+  }
+  const user = session.data.session.user;
+  const userId = user.id;
 
+  const { data: userNutrition, error: userNutritionError } = await supabase
+    .from('user_nutrition')
+    .select('caloriegoal')
+    .eq('id', userId)
+    .single();
 
+  if (userNutritionError) {
+    console.error('Error fetching user nutrition data:', userNutritionError);
+    return null;
+  }
 
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0);
 
-    
+  const { data: dailyIntake, error: dailyIntakeError } = await supabase
+    .from('daily_intake')
+    .select('date, calories')
+    .eq('id', userId)
+    .gte('date', startDate.toISOString().split('T')[0])
+    .lte('date', endDate.toISOString().split('T')[0]);
 
+  if (dailyIntakeError) {
+    console.error('Error fetching daily intake data:', dailyIntakeError);
+    return null;
+  }
 
+  const daysMeetingGoals = dailyIntake.reduce((count, entry) => {
+    const withinCalorieRange = Math.abs(entry.calories - userNutrition.caloriegoal) <= 100;
+
+    if (withinCalorieRange) {
+      return count + 1;
+    }
+    return count;
+  }, 0);
+
+  return daysMeetingGoals;
+}
+
+export async function fetchProteinBadgeData(year, month) {
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) {
+    throw new Error('User not logged in');
+  }
+  const user = session.data.session.user;
+  const userId = user.id;
+
+  const { data: userNutrition, error: userNutritionError } = await supabase
+    .from('user_nutrition')
+    .select('proteingoal')
+    .eq('id', userId)
+    .single();
+
+  if (userNutritionError) {
+    console.error('Error fetching user nutrition data:', userNutritionError);
+    return 0;
+  }
+
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0);
+
+  const { data: dailyIntake, error: dailyIntakeError } = await supabase
+    .from('daily_intake')
+    .select('date, proteins')
+    .eq('id', userId)
+    .gte('date', startDate.toISOString().split('T')[0])
+    .lte('date', endDate.toISOString().split('T')[0]);
+
+  if (dailyIntakeError) {
+    console.error('Error fetching daily intake data:', dailyIntakeError);
+    return null;
+  }
+
+  const daysMeetingGoals = dailyIntake.reduce((count, entry) => {
+    const withinProteinRange = Math.abs(entry.proteins - userNutrition.proteingoal) <= 2;
+
+    if (withinProteinRange) {
+      return count + 1;
+    }
+    return count;
+  }, 0);
+
+  return daysMeetingGoals;
+}
+
+export async function fetchPhotoBadgeData(year, month) {
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) {
+    throw new Error('User not logged in');
+  }
+  const user = session.data.session.user;
+  const userId = user.id;
+
+  const startDate = new Date(year, month, 1).toISOString().split('T')[0];
+  const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+
+  const { data: dailyIntake, error: dailyIntakeError } = await supabase
+    .from('daily_intake')
+    .select('date, meal_type')
+    .eq('id', userId)
+    .gte('date', startDate)
+    .lte('date', endDate);
+
+  if (dailyIntakeError) {
+    console.error('Error fetching daily intake data:', dailyIntakeError);
+    return 0;
+  }
+
+  const mealLog = {};
+
+  dailyIntake.forEach(entry => {
+    const date = entry.date;
+    if (!mealLog[date]) {
+      mealLog[date] = new Set();
+    }
+    mealLog[date].add(entry.meal_type);
+  });
+
+  const daysWithAllMeals = Object.values(mealLog).filter(meals => meals.has('Breakfast') && meals.has('Lunch') && meals.has('Dinner')).length;
+
+  return daysWithAllMeals;
+}
+
+export async function fetchHydrationBadgeData(year, month) {
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) {
+    throw new Error('User not logged in');
+  }
+  const user = session.data.session.user;
+  const userId = user.id;
+
+  const startDate = new Date(year, month, 1).toISOString().split('T')[0];
+  const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+
+  const { data: dailyWaterIntake, error: dailyWaterIntakeError } = await supabase
+    .from('daily_water_intake')
+    .select('date, water_intake')
+    .eq('id', userId)
+    .gte('date', startDate)
+    .lte('date', endDate);
+
+  if (dailyWaterIntakeError) {
+    console.error('Error fetching daily water intake data:', dailyWaterIntakeError);
+    return 0;
+  }
+
+  const daysWithFullIntake = dailyWaterIntake.filter(entry => entry.water_intake >= 8).length;
+
+  return daysWithFullIntake;
+}
