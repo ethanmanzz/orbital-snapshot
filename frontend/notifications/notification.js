@@ -8,21 +8,24 @@ import { supabase } from '../../backend/supabase/supabaseClient';
 // Function to register for push notifications
 async function registerForPushNotificationsAsync() {
   let token;
+  console.log('Checking if device is physical:', Constants.isDevice);
   if (Constants.isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    console.log('Existing permission status:', existingStatus);
     let finalStatus = existingStatus;
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
+      console.log('Requested permission status:', finalStatus);
     }
     if (finalStatus !== 'granted') {
       alert('Failed to get push token for push notification!');
       return;
     }
     token = (await Notifications.getExpoPushTokenAsync()).data;
-  } else {
+  } /*else {
     alert('Must use physical device for Push Notifications');
-  }
+  }*/
 
   if (Platform.OS === 'android') {
     Notifications.setNotificationChannelAsync('default', {

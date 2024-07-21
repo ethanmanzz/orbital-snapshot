@@ -27,7 +27,6 @@ const HomeScreen = ({ navigation }) => {
     setModalVisible(true);
   };
 
-  //added this to solve the issue of photo not being displayed in upload screen
   const onPictureSaved = async (photoUri) => {
     try {
       console.log('Photo URI:', photoUri); // Debugging log
@@ -41,7 +40,7 @@ const HomeScreen = ({ navigation }) => {
       Alert.alert('Error', 'Failed to save photo to library.');
     }
   };
-  
+
   const takePhotoFromCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -54,15 +53,15 @@ const HomeScreen = ({ navigation }) => {
       aspect: [4, 3],
       quality: 1,
     });
-  
+
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const photoUri = result.assets[0].uri;
       console.log('Photo Result:', result); // Debugging log
-      onPictureSaved(photoUri);
-      setModalVisible(false); // close modal after taking photo
+      await onPictureSaved(photoUri);
+      setModalVisible(false);
     }
+    
   };
-  
 
   const choosePhotoFromLibrary = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -76,9 +75,12 @@ const HomeScreen = ({ navigation }) => {
       aspect: [4, 3],
       quality: 1,
     });
-    if (!result.cancelled) {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       navigation.navigate('UploadScreen', { selectedImages: result.assets });
+    } else {
+      navigation.navigate('HomeScreen');
     }
+    setModalVisible(false); // close modal after choosing photo or canceling
   };
 
   const handleDateChange = (event, selectedDate) => {
@@ -162,11 +164,11 @@ const HomeScreen = ({ navigation }) => {
       });
     };
   }, [date, refreshData]);
-  
+
   const getProgressData = (current, goal) => {
     return current / goal;
   };
-  
+
   const progressData = {
     labels: ["Calories", "Protein", "Fats", "Carbs"],
     data: nutritionData
@@ -267,15 +269,20 @@ const HomeScreen = ({ navigation }) => {
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
-            setModalVisible(!modalVisible);
+            setModalVisible(false); // close modal on request close
           }}
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
               <Text style={styles.modalText}>Upload Photo</Text>
               <Button title="Take Photo" onPress={takePhotoFromCamera} />
-              <Button title="Choose From Library" onPress={choosePhotoFromLibrary} />
-              <Button title="Cancel" onPress={() => setModalVisible(!modalVisible)} />
+              <Button title="Choose From Library" onPress={() => {
+                setModalVisible(false);
+                choosePhotoFromLibrary();
+              }} />
+              <Button title="Cancel" onPress={() => {
+                setModalVisible(false);
+              }} />
             </View>
           </View>
         </Modal>
@@ -406,4 +413,5 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
 
