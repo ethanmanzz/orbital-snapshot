@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, Image, Alert, Dimensions, View, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { ScrollView, Text, Image, Alert, Dimensions, View, Platform, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
@@ -140,35 +140,65 @@ const UploadScreen = () => {
 
   const uploadAndAnalyzeImage = async (imageUri, mealType) => {
     setIsAnalysing(true);
-    const uploadResult = await uploadImageToSupabase(imageUri);
-    console.log("Upload result:", uploadResult);
-    if (uploadResult) {
-      const analysisResults = await analyzeImage(uploadResult.url);
-      console.log("Analysis results:", analysisResults);
-      const entryId = await saveAnalysisResults(analysisResults, date, mealType); // Pass the selected date and meal type here
-      if (entryId) {
-        const saveResults = await saveImageMetadata(uploadResult.url, entryId, date); 
-        console.log('Analysis and save results:', saveResults);
-        Alert.alert('Success', 'Analysis completed!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Home', { refresh: true }), // Navigate back with refresh parameter
-          },
-        ]);
-      } else {
-        console.error('Failed to save analysis results.');
-      }
-    } else {
-      console.error('Failed to upload image.');
-    }
-    setIsAnalysing(false);
+    Alert.alert('Info', 'Analysis is underway. Please wait...', [
+      {
+        text: 'OK',
+        onPress: async () => {
+          const uploadResult = await uploadImageToSupabase(imageUri);
+          console.log("Upload result:", uploadResult);
+          if (uploadResult) {
+            const analysisResults = await analyzeImage(uploadResult.url);
+            console.log("Analysis results:", analysisResults);
+            const entryId = await saveAnalysisResults(analysisResults, date, mealType); // Pass the selected date and meal type here
+            if (entryId) {
+              const saveResults = await saveImageMetadata(uploadResult.url, entryId, date); 
+              console.log('Analysis and save results:', saveResults);
+              Alert.alert('Success', 'Analysis completed!', [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    setIsAnalysing(false);
+                    navigation.navigate('Home', { refresh: true }); // Navigate back with refresh parameter
+                  },
+                },
+              ]);
+            } else {
+              console.error('Failed to save analysis results.');
+              Alert.alert('Error', 'Failed to save analysis results.', [
+                {
+                  text: 'OK',
+                  onPress: () => setIsAnalysing(false),
+                },
+              ]);
+            }
+          } else {
+            console.error('Failed to upload image.');
+            Alert.alert('Error', 'Failed to upload image.', [
+              {
+                text: 'OK',
+                onPress: () => setIsAnalysing(false),
+              },
+            ]);
+          }
+        },
+      },
+    ]);
   };
 
   return (
     <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 20 }}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => images.forEach((img, index) => uploadAndAnalyzeImage(img.uri, mealTypes[index]))}>
-          <Text style={styles.buttonText}>Upload and Analyze Images</Text>
+        <TouchableOpacity 
+          onPress={() => {
+            if (!isAnalysing) {
+              images.forEach((img, index) => uploadAndAnalyzeImage(img.uri, mealTypes[index]));
+            }
+          }} 
+          disabled={isAnalysing}
+        >
+          <Text style={[styles.buttonText, isAnalysing ? { color: 'grey' } : { color: 'blue' }]}>
+            {isAnalysing ? 'Analyzing...' : 'Upload and Analyze Images'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={showDatePicker}>
           <Text style={styles.buttonText}>Select Date</Text>
@@ -207,6 +237,7 @@ const UploadScreen = () => {
           </View>
         </View>
       ))}
+      {isAnalysing && <ActivityIndicator size="large" color="#0000ff" />}
     </ScrollView>
   );
 };
@@ -251,8 +282,3 @@ const styles = StyleSheet.create({
 });
 
 export default UploadScreen;
-
-
-
-
-

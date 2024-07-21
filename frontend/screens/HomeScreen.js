@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Button, Dimensions, Image, Alert, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as MediaLibrary from 'expo-media-library';
 import * as ImagePicker from 'expo-image-picker';
 import { fetchUserNutritionData, fetchUserWaterIntake, updateUserWaterIntake, fetchUserImagesForDate, fetchUserName, setupRealTimeSubscriptionForImages, setupRealTimeSubscription} from '../../backend/supabase/database';
 import { ProgressChart } from 'react-native-chart-kit';
 import Svg, { Rect } from 'react-native-svg'; 
 import { getUser } from '../../backend/supabase/auth'; 
+import { initializePushNotifications } from '../notifications/notification';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -26,6 +28,21 @@ const HomeScreen = ({ navigation, route }) => {
     setModalVisible(true);
   };
 
+  //added this to solve the issue of photo not being displayed in upload screen
+  const onPictureSaved = async (photoUri) => {
+    try {
+      console.log('Photo URI:', photoUri); // Debugging log
+      if (typeof photoUri !== 'string' || !photoUri) {
+        throw new Error('Invalid photo URI');
+      }
+      await MediaLibrary.saveToLibraryAsync(photoUri);
+      navigation.navigate('UploadScreen', { selectedImages: [{ uri: photoUri }] });
+    } catch (error) {
+      console.error('Error saving photo:', error);
+      Alert.alert('Error', 'Failed to save photo to library.');
+    }
+  };
+  
   const takePhotoFromCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -38,12 +55,15 @@ const HomeScreen = ({ navigation, route }) => {
       aspect: [4, 3],
       quality: 1,
     });
-    if (!result.cancelled) {
-      console.log(result.uri);
-      navigation.navigate('UploadScreen', { photoUri: result.uri });
+  
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const photoUri = result.assets[0].uri;
+      console.log('Photo Result:', result); // Debugging log
+      onPictureSaved(photoUri);
       setModalVisible(false); // close modal after taking photo
     }
   };
+  
 
   const choosePhotoFromLibrary = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -56,10 +76,8 @@ const HomeScreen = ({ navigation, route }) => {
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
-      // ensures allowsMultipleSelection is not enabled
     });
     if (!result.cancelled) {
-      console.log('Selected images from library:', result.assets);
       navigation.navigate('UploadScreen', { selectedImages: result.assets });
     }
   };
@@ -133,6 +151,8 @@ const HomeScreen = ({ navigation, route }) => {
     };
 
     const unsubscribe = setupSubscriptions();
+
+    initializePushNotifications();
 
     return () => {
       unsubscribe.then(({ unsubscribeImages, unsubscribeNutrition }) => {
