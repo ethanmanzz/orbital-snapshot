@@ -11,6 +11,7 @@ import { initializePushNotifications } from '../notifications/notification';
 
 const screenWidth = Dimensions.get('window').width;
 
+//
 const HomeScreen = ({ navigation }) => {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
