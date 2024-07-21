@@ -1,0 +1,9 @@
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, id:26783FDB-AACF-441B-AA22-70138E037262, OS:17.5, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:26783FDB-AACF-441B-AA22-70138E037262, OS:17.5, name:iPhone 15 Pro Max }
+** BUILD FAILED **
+
+
+The following build commands failed:
+	PhaseScriptExecution [CP]\ Copy\ XCFrameworks /Users/jwong/Library/Developer/Xcode/DerivedData/snapshot-bugiqbrainvljjhdoohvaznwyvge/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/hermes-engine.build/Script-46EB2E00024640.sh (in target 'hermes-engine' from project 'Pods')
+(1 failure)
