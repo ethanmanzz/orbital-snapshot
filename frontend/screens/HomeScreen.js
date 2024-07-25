@@ -77,9 +77,12 @@ const HomeScreen = ({ navigation, route }) => {
       aspect: [4, 3],
       quality: 1,
     });
-    if (!result.cancelled) {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       navigation.navigate('UploadScreen', { selectedImages: result.assets });
+    } else {
+      navigation.navigate('HomeScreen');
     }
+    setModalVisible(false); 
   };
 
   const handleDateChange = (event, selectedDate) => {

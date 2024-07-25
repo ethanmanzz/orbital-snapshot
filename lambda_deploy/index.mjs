@@ -29,11 +29,11 @@ async function sendPushNotification(pushToken, message) {
 }
 
 async function checkDailyIntakeAndNotify() {
-  const testUserId = '7ad55cbf-fc6a-4c55-a0bd-22737212d9df';
+  //const testUserId = '7ad55cbf-fc6a-4c55-a0bd-22737212d9df';
   const { data: users, error } = await supabase
     .from('profiles')
     .select('id, push_token')
-    .eq('id', testUserId);
+    //.eq('id', testUserId);
 
   if (error) {
     console.error(error);

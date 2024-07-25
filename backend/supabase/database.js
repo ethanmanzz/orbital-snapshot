@@ -27,6 +27,15 @@ export const handleName = async (thisFullName, thisUserName, navigation) => {
       .update({ username: thisUserName, full_name: thisFullName }) //update username and fullname into supabase
       .eq('id', user.id);
 
+    // Check if username is already taken
+    if (error) {
+      if (error.code === '23505' && error.message.includes('profiles_username_key')) {
+        throw { message: 'Username not available. Please enter another username.', isDuplicateUsername: true };
+      } else {
+        throw error;
+      }
+    }
+
     // Create user on Stream Chat
     const client = StreamChat.getInstance(chatApiKey);
     console.log('StreamChat Client:', client);
