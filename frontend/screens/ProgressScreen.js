@@ -199,6 +199,22 @@ const ProgressScreen = () => {
     }
   }
 
+  const getChartTitle = () => {
+    const period = selectedIndex === 0 ? 'Meal' : 'Day';
+    switch (selectedGraph) {
+      case 'calories':
+        return `Average Calories Intake Per ${period}`;
+      case 'proteins':
+        return `Average Proteins Intake Per ${period}`;
+      case 'fats':
+        return `Average Fats Intake Per ${period}`;
+      case 'carbs':
+        return `Average Carbs Intake Per ${period}`;
+      default:
+        return '';
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
         <View style={styles.header}>
@@ -246,7 +262,7 @@ const ProgressScreen = () => {
         </Text>
       </View>
       <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{`Average ${selectedGraph.charAt(0).toUpperCase() + selectedGraph.slice(1)} Intake Per Meal`}</Text>
+        <Text style={styles.chartTitle}>{getChartTitle()}</Text>
         <BarChart
           style={styles.chartStyle}
           data={data}
