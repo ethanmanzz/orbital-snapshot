@@ -70,7 +70,7 @@ const UploadScreen = () => {
 
   const analyzeImage = async (imageUrl) => {
     try {
-      const response = await fetch('http://foodvisor-env.eba-rksc8ccx.ap-southeast-1.elasticbeanstalk.com/analyze', {
+      const response = await fetch('http://final-snapshot-env.eba-r3ex2dqi.ap-southeast-1.elasticbeanstalk.com/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

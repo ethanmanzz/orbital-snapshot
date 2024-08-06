@@ -55,11 +55,11 @@ const HomeScreen = ({ navigation, route }) => {
       aspect: [4, 3],
       quality: 1,
     });
-  
+
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const photoUri = result.assets[0].uri;
       console.log('Photo Result:', result); // Debugging log
-      onPictureSaved(photoUri);
+      await onPictureSaved(photoUri);
       setModalVisible(false); // close modal after taking photo
     }
   };
@@ -82,8 +82,9 @@ const HomeScreen = ({ navigation, route }) => {
     } else {
       navigation.navigate('HomeScreen');
     }
-    setModalVisible(false); 
+    setModalVisible(false); // close modal after choosing photo or canceling
   };
+
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
@@ -109,6 +110,7 @@ const HomeScreen = ({ navigation, route }) => {
     setUserImages(images);
   };
 
+
   const handleAddWater = async () => {
     if (waterIntake >= 8) {
       Alert.alert('Congratulations!', 'You have already drunk 8 cups of water today, keep it up!');
@@ -120,52 +122,52 @@ const HomeScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    fetchNutritionData(date);
-    fetchWaterIntake(date);
+    fetchNutritionData(date); 
+    fetchWaterIntake(date); 
     fetchUserImages(date);
     const getUserName = async () => {
       const name = await fetchUserName();
-      setUserName(name.username);
+      setUserName(name.username); 
     };
-    getUserName();
+    getUserName(); 
 
     const setupSubscriptions = async () => {
       const session = await getUser();
-      if (!session.data.session) {
-        throw new Error('User not logged in');
+      if (!session.data.session) { 
+        throw new Error('User not logged in'); 
       }
 
       const user = session.data.session.user;
 
-      const unsubscribeImages = await setupRealTimeSubscriptionForImages(user.id, date, (updatedImageList) => {
-        console.log('Updated image list received:', updatedImageList); // Debugging log
-        setUserImages(updatedImageList);
+      const unsubscribeImages = await setupRealTimeSubscriptionForImages(user.id, date, (updatedImageList) => { 
+        console.log('Updated image list received:', updatedImageList); 
+        setUserImages(updatedImageList); 
       });
 
-      const unsubscribeNutrition = await setupRealTimeSubscription(user.id, (updatedNutritionData) => {
-        console.log('Updated nutrition data received:', updatedNutritionData); // Debugging log
+      const unsubscribeNutrition = await setupRealTimeSubscription(user.id, (updatedNutritionData) => { 
+        console.log('Updated nutrition data received:', updatedNutritionData); 
         setNutritionData(updatedNutritionData.nutritionData);
       });
 
-      return () => {
-        unsubscribeImages;
-        unsubscribeNutrition;
+      return () => { 
+        unsubscribeImages();
+        unsubscribeNutrition(); 
       };
     };
 
-    const unsubscribe = setupSubscriptions();
+    setupSubscriptions(); 
 
-    initializePushNotifications();
+    initializePushNotifications(); 
 
-    return () => {
-      unsubscribe.then(({ unsubscribeImages, unsubscribeNutrition }) => {
-        if (unsubscribeImages) unsubscribeImages();
-        if (unsubscribeNutrition) unsubscribeNutrition();
-      }).catch(error => {
-        console.error('Error unsubscribing:', error);
-      });
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      fetchUserImages(date);
+    });
+
+    return () => { 
+      unsubscribeFocus(); 
     };
-  }, [date, refreshData]);
+  }, [date, route.params]);
+  
   
   const getProgressData = (current, goal) => {
     return Math.min(current / goal, 1);
